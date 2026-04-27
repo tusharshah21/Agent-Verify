@@ -18,36 +18,56 @@ AI agents that can't be impersonated, find each other securely, execute onchain 
 
 AgentVerify is built on four pillars:
 
+```mermaid
+graph TB
+    subgraph AGENTS["👥 Agent Ecosystem"]
+        A["Agent A"]
+        B["Agent B"]
+        C["Agent C"]
+    end
+    
+    subgraph IDENTITY["🎫 Identity Layer<br/>(ENS)"]
+        ENS["<b>Ethereum Name Service</b><br/>agentA.eth<br/>agentB.eth<br/>agentC.eth"]
+    end
+    
+    subgraph COMMS["🔐 P2P Communication<br/>(AXL Mesh)"]
+        AXL["<b>Gensyn Mesh</b><br/>Encrypted Messages<br/>Agent Discovery<br/>Task Routing"]
+    end
+    
+    subgraph EXECUTE["⛽ Execution<br/>(KeeperHub)"]
+        KEEPER["<b>KeeperHub</b><br/>Gasless Execution<br/>Retries<br/>Audit Trail"]
+    end
+    
+    subgraph SETTLE["💱 Settlement<br/>(Uniswap)"]
+        SWAP["<b>Uniswap V3</b><br/>Token Swaps<br/>Price Optimization<br/>Autonomous Payments"]
+    end
+    
+    subgraph NETWORK["🔗 Ethereum Sepolia"]
+        NET["Sepolia Testnet<br/>ChainID: 11155111"]
+    end
+    
+    A --> ENS
+    B --> ENS
+    C --> ENS
+    ENS --> AXL
+    AXL --> KEEPER
+    KEEPER --> SWAP
+    SWAP --> NET
+    
+    style AGENTS fill:#e1f5ff,color:#01579b
+    style ENS fill:#fff3e0,color:#e65100
+    style AXL fill:#f3e5f5,color:#4a148c
+    style KEEPER fill:#e8f5e9,color:#1b5e20
+    style SWAP fill:#fce4ec,color:#880e4f
+    style NET fill:#f1f8e9,color:#33691e
 ```
-┌──────────────────────────────────────────────────────────────┐
-│                   AGENT ECOSYSTEM                            │
-├──────────────────────────────────────────────────────────────┤
-│                                                              │
-│  [Agent A]  ←—— ENS ——→  [Agent B]  ←—— ENS ——→  [Agent C]  │
-│     ↓                       ↓                        ↓       │
-│  Identity              Identity                   Identity   │
-│  (agentA.eth)          (agentB.eth)              (agentC.eth) │
-│                                                              │
-│  ┌──────────────┐      ┌──────────────┐      ┌──────────────┐
-│  │     AXL      │      │     AXL      │      │     AXL      │
-│  │  P2P Mesh    │←—————→  P2P Mesh    │←—────→  P2P Mesh    │
-│  │   (Gensyn)   │      │   (Gensyn)   │      │   (Gensyn)   │
-│  └──────────────┘      └──────────────┘      └──────────────┘
-│         ↓                     ↓                      ↓        │
-│  ┌──────────────┐      ┌──────────────┐      ┌──────────────┐
-│  │ KeeperHub    │      │ KeeperHub    │      │ KeeperHub    │
-│  │ Execution    │      │ Execution    │      │ Execution    │
-│  │ (No Gas UI)  │      │ (No Gas UI)  │      │ (No Gas UI)  │
-│  └──────────────┘      └──────────────┘      └──────────────┘
-│         ↓                     ↓                      ↓        │
-│  ┌──────────────────────────────────────────────────────────┐
-│  │           Uniswap V3 Settlement                          │
-│  │   Agents pay each other in any token autonomously        │
-│  └──────────────────────────────────────────────────────────┘
-│                                                              │
-│              Ethereum Sepolia Testnet                        │
-└──────────────────────────────────────────────────────────────┘
-```
+
+### **How It Works:**
+
+1. **Identity (ENS)** — Each agent owns a `.eth` name with capabilities & reputation
+2. **Discovery (AXL)** — Agents find each other via encrypted P2P mesh
+3. **Execution (KeeperHub)** — Agents trigger onchain actions reliably
+4. **Settlement (Uniswap)** — Agents pay each other in any token autonomously
 
 ---
 
@@ -86,13 +106,13 @@ AgentVerify is built on four pillars:
 ### Prerequisites
 - Node.js 18+
 - Sepolia testnet wallet with ≥ 0.5 ETH
-- [Infura API key](https://infura.io) (or similar RPC provider)
+- [Alchemy RPC key](https://www.alchemy.com) (or similar provider)
 
 ### Installation
 
 ```bash
 # 1. Clone repo
-git clone https://github.com/yourusername/agentverify.git
+git clone https://github.com/tusharshah21/Agent-Verify.git
 cd agentverify
 
 # 2. Install dependencies
@@ -106,33 +126,37 @@ cp .env.example .env.local
 npm run dev
 
 # 5. Open dashboard
-# http://localhost:3000/dashboard
+# http://localhost:3000
 ```
 
 ### Run Tests
 
 ```bash
+# CP0: Environment validation
+node test-cp0.js
+
 # CP1: ENS Identity System
 node test-cp1.js
 
-# (CP2-CP6 tests coming soon)
+# CP2: AXL P2P (coming soon)
+node test-cp2.js
 ```
 
 ---
 
-## 📋 **Checkpoint Structure (36h Build)**
+## � **Checkpoint Progress**
 
-| CP | Phase | Duration | Status |
-|----|-------|----------|--------|
-| **CP0** | Environment Setup | 2h | ⏳ Pending |
-| **CP1** | ENS Identity System | 4h | ✅ Complete |
-| **CP2** | AXL P2P Discovery | 6h | ⏳ Pending |
-| **CP3** | KeeperHub Execution | 4h | ⏳ Pending |
-| **CP4** | Uniswap Settlement | 4h | ⏳ Pending |
-| **CP5** | Dashboard UI | 8h | ⏳ Pending |
-| **CP6** | Demo + Submission | 8h | ⏳ Pending |
+| CP | Phase | Duration | Status | What's Done |
+|----|-------|----------|--------|-------------|
+| **CP0** | Environment Setup | 2h | ✅ **COMPLETE** | RPC, wallet, config, validation |
+| **CP1** | ENS Identity System | 4h | ✅ **COMPLETE** | Agent registration, resolution, tests |
+| **CP2** | AXL P2P Messaging | 6h | ⏳ **NEXT** | Agent discovery, encrypted tasks |
+| **CP3** | KeeperHub Execution | 4h | ⏳ Planned | Gasless execution, retries |
+| **CP4** | Uniswap Settlement | 4h | ⏳ Planned | Autonomous payments, token swaps |
+| **CP5** | Dashboard UI | 8h | ⏳ Planned | Agent management, task history |
+| **CP6** | Final Demo | 8h | ⏳ Planned | Testing, bug fixes, submission |
 
-See [AGENTID_CHECKPOINTS.md](./AGENTID_CHECKPOINTS.md) for detailed task breakdown.
+**Current Progress:** 6/36 hours (17%) — **2/7 checkpoints complete** ✅
 
 ---
 
@@ -190,6 +214,7 @@ agentverify/
 │   └── Home.module.css
 │
 ├── test-cp1.js               # CP1 unit tests
+├── test-cp0.js               # CP0 validation tests
 ├── .env.example              # Environment template
 ├── .env.local                # Local secrets (gitignored)
 ├── package.json
@@ -259,51 +284,50 @@ npm test
 ### Run Specific Checkpoint Tests
 
 ```bash
+# CP0: Environment validation
+node test-cp0.js
+
 # CP1: ENS Identity
 node test-cp1.js
 
 # CP2: AXL P2P (coming soon)
 node test-cp2.js
-
-# ... etc
 ```
 
 ---
 
 ## 📖 **How It Works**
 
-### Scenario: Agent A Asks Agent B to Swap
+### Step-by-Step Breakdown:
 
-```
-1. IDENTITY
-   Agent A resolves agentB.eth via ENS
-   → Gets agentB's address + capabilities
-   → Verifies agentB can handle swaps
+1. **IDENTITY** 🎫
+   - Agent A resolves `agentB.eth` via ENS
+   - Gets agentB's address + capabilities
+   - Verifies agentB can handle swaps
 
-2. COMMUNICATION
-   Agent A sends task message via AXL mesh:
-   "Swap 100 USDC → DAI, send to my wallet"
-   → Message encrypted, peer-to-peer
-   → Agent B receives it
+2. **COMMUNICATION** 🔐
+   - Agent A sends encrypted task message via AXL mesh
+   - "Swap 100 USDC → DAI, send to my wallet"
+   - Message is peer-to-peer, fully encrypted
+   - Agent B receives it securely
 
-3. EXECUTION
-   Agent B calls KeeperHub:
-   "Execute this swap transaction"
-   → KeeperHub handles gas, retries
-   → Transaction confirmed onchain
+3. **EXECUTION** ⛽
+   - Agent B calls KeeperHub
+   - "Execute this swap transaction"
+   - KeeperHub handles gas, retries, MEV protection
+   - Transaction confirmed onchain
 
-4. SETTLEMENT
-   Agent B calls Uniswap:
-   "Swap 100 USDC for DAI"
-   → Uniswap executes swap
-   → Sends DAI to Agent A's wallet
+4. **SETTLEMENT** 💱
+   - Agent B calls Uniswap V3
+   - "Swap 100 USDC for DAI"
+   - Uniswap executes swap optimally
+   - DAI sent directly to Agent A's wallet
 
-5. REPUTATION
-   Agent B updates its ENS text record:
-   "reputation: 101"
-   → Other agents see the score
-   → Trust increases
-```
+5. **REPUTATION** ⭐
+   - Agent B updates its ENS text record
+   - "reputation: 101"
+   - Other agents see the updated score
+   - Trust increases for future interactions
 
 ---
 
@@ -336,14 +360,6 @@ Contributions welcome! Please:
 3. Commit changes (`git commit -m 'Add amazing feature'`)
 4. Push to branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
-
----
-
-## 📧 **Contact**
-
-- **GitHub:** [@yourusername](https://github.com/yourusername)
-- **Twitter:** [@yourhandle](https://twitter.com/yourhandle)
-- **Email:** your.email@example.com
 
 ---
 
