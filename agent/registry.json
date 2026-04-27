@@ -1,0 +1,29 @@
+{
+  "agents": [
+    {
+      "name": "agentA.eth",
+      "address": "0x1234567890123456789012345678901234567890",
+      "capabilities": {
+        "execute": true,
+        "swap": true,
+        "bridge": false
+      },
+      "reputation": 150,
+      "version": "1.0.0",
+      "registeredAt": "2026-04-27T17:40:47.055Z",
+      "txHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "name": "agentB.eth",
+      "address": "0x2345678901234567890123456789012345678901",
+      "capabilities": {
+        "execute": true,
+        "swap": false
+      },
+      "reputation": 100,
+      "version": "1.0.0",
+      "registeredAt": "2026-04-27T17:40:47.074Z",
+      "txHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  ]
+}

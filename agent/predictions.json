@@ -1,0 +1,99 @@
+[
+  {
+    "id": "TRX-2026-02-08",
+    "date": "2026-02-08",
+    "asset": "TRX",
+    "strike": 0.281,
+    "direction": "ABOVE",
+    "resolutionUTC": "2026-02-08T00:00:00Z",
+    "probability": 60,
+    "confidence": "MEDIUM",
+    "signals": {
+      "whaleScore": 65,
+      "momentum": 58,
+      "volatility": 60,
+      "stress": 55,
+      "timestamp": 1770570723849
+    },
+    "status": "RESOLVED",
+    "outcome": "NO",
+    "resolvedPrice": 0.2792
+  },
+  {
+    "id": "PRED-8088",
+    "date": "2026-02-09",
+    "asset": "TRX",
+    "startPrice": 0.2778,
+    "strike": 0.2792,
+    "direction": "ABOVE",
+    "probability": 60,
+    "confidence": "MEDIUM",
+    "signals": {
+      "whaleScore": 65,
+      "momentum": 58,
+      "volatility": 60,
+      "stress": 55,
+      "timestamp": 1770596188666
+    },
+    "status": "RESOLVED",
+    "outcome": "WIN",
+    "tweetId": "2020652988835217764",
+    "communityVote": {
+      "likes": 0,
+      "rts": 0,
+      "consensus": "DISAGREE"
+    },
+    "resolvedPrice": 0.2792
+  },
+  {
+    "id": "PRED-2743",
+    "date": "2026-02-10",
+    "asset": "TRX",
+    "startPrice": 0.2791,
+    "strike": 0.2805,
+    "direction": "ABOVE",
+    "probability": 60,
+    "confidence": "MEDIUM",
+    "signals": {
+      "whaleScore": 65,
+      "momentum": 58,
+      "volatility": 60,
+      "stress": 55,
+      "timestamp": 1770681833686
+    },
+    "status": "RESOLVED",
+    "outcome": "LOSS",
+    "tweetId": "2021012211083428308",
+    "communityVote": {
+      "likes": 0,
+      "rts": 2,
+      "consensus": "DISAGREE"
+    },
+    "resolvedPrice": 0.278
+  },
+  {
+    "id": "PRED-9488",
+    "date": "2026-02-11",
+    "asset": "TRX",
+    "startPrice": 0.278,
+    "strike": 0.2794,
+    "direction": "ABOVE",
+    "probability": 60,
+    "confidence": "MEDIUM",
+    "signals": {
+      "whaleScore": 65,
+      "momentum": 58,
+      "volatility": 60,
+      "stress": 55,
+      "timestamp": 1770768831238
+    },
+    "status": "ACTIVE",
+    "outcome": null,
+    "tweetId": "2021377108556251430",
+    "communityVote": {
+      "likes": 0,
+      "rts": 0,
+      "consensus": "PENDING"
+    }
+  }
+]

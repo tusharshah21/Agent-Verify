@@ -1,0 +1,120 @@
+/* agent/dashboard.js - VERSION: CYBERPUNK WAR ROOM */
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const DATA_FILE = path.join(__dirname, 'predictions.json');
+const OUTPUT_FILE = path.join(__dirname, '../market_dashboard.html');
+
+console.log("🔮 REFRACTING DATA STREAMS...");
+
+let predictions = [];
+try {
+    const raw = fs.readFileSync(DATA_FILE, 'utf8');
+    predictions = JSON.parse(raw);
+} catch (e) { }
+
+const total = predictions.length;
+const resolved = predictions.filter(p => p.status === "RESOLVED");
+const wins = resolved.filter(p => p.outcome === "WIN").length;
+const accuracy = total > 0 ? Math.round((wins / resolved.length) * 100) || 0 : 0;
+const active = predictions.filter(p => p.status === "ACTIVE");
+
+const html = `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PINKERTAPE /// SENTINEL TERMINAL</title>
+    <style>
+        body { background: #050505; color: #0f0; font-family: 'Courier New', monospace; padding: 20px; overflow-x: hidden; }
+        .container { max-width: 1200px; margin: 0 auto; border: 1px solid #333; padding: 20px; box-shadow: 0 0 20px rgba(0, 255, 0, 0.1); }
+        h1 { margin: 0; font-size: 2em; letter-spacing: 5px; border-bottom: 2px solid #0f0; padding-bottom: 10px; margin-bottom: 20px; }
+        
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px; }
+        .panel { background: #0a0a0a; border: 1px solid #1a1a1a; padding: 15px; position: relative; }
+        .panel h3 { margin: 0 0 10px 0; font-size: 0.7em; color: #555; text-transform: uppercase; }
+        .panel .val { font-size: 2em; font-weight: bold; color: #fff; }
+        
+        .blink { animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
+        th { text-align: left; color: #444; border-bottom: 1px solid #222; padding: 10px; }
+        td { padding: 12px 10px; border-bottom: 1px solid #111; color: #aaa; }
+        
+        .status-ACTIVE { color: #00ccff; text-shadow: 0 0 5px #00ccff; }
+        .status-WIN { color: #0f0; text-shadow: 0 0 5px #0f0; }
+        .status-LOSS { color: #f00; text-shadow: 0 0 5px #f00; }
+        
+        .scan-line { height: 2px; width: 100%; background: rgba(0, 255, 0, 0.1); position: fixed; top: 0; left: 0; animation: scan 3s linear infinite; pointer-events: none; }
+        @keyframes scan { 0% { top: -10%; } 100% { top: 110%; } }
+    </style>
+</head>
+<body>
+    <div class="scan-line"></div>
+    <div class="container">
+        <h1>PINKERTAPE <span class="blink">_</span>SENTINEL</h1>
+        
+        <div class="grid">
+            <div class="panel">
+                <h3>System Status</h3>
+                <div class="val" style="color:#0f0">ONLINE</div>
+            </div>
+            <div class="panel">
+                <h3>30-Day Accuracy</h3>
+                <div class="val">${accuracy}%</div>
+            </div>
+            <div class="panel">
+                <h3>Open Markets</h3>
+                <div class="val" style="color:#00ccff">${active.length}</div>
+            </div>
+            <div class="panel">
+                <h3>Network</h3>
+                <div class="val">TRON</div>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>DATE UTC</th>
+                    <th>ASSET</th>
+                    <th>TARGET</th>
+                    <th>VOTE CONSENSUS</th>
+                    <th>RESULT</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${predictions.map(p => `
+                <tr>
+                    <td>[${p.id}]</td>
+                    <td>${p.date}</td>
+                    <td>${p.asset}</td>
+                    <td>$${p.strike}</td>
+                    <td>${p.communityVote ? p.communityVote.consensus : "WAITING..."}</td>
+                    <td class="status-${p.outcome || p.status}">${p.outcome || p.status}</td>
+                </tr>
+                `).reverse().join('')}
+            </tbody>
+        </table>
+        
+        <p style="margin-top: 30px; font-size: 0.7em; color: #333;">
+            // ENCRYPTED CONNECTION ESTABLISHED<br>
+            // NODE: NILE_TESTNET_BRIDGE<br>
+            // MEMORY ARRAY: ${total} ENTRIES
+        </p>
+    </div>
+    
+    <script>
+        // Auto-refresh for the video feel
+        setTimeout(() => window.location.reload(), 10000);
+    </script>
+</body>
+</html>
+`;
+
+fs.writeFileSync(OUTPUT_FILE, html);
+console.log(`✅ TACTICAL DISPLAY UPDATED: ${OUTPUT_FILE}`);
