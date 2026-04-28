@@ -144,10 +144,15 @@ node test-cp2.js
 
 ---
 
-## 🧪 **Local Testing Guide (CP2)**
+## 🧪 **Local Testing Guide (CP3)**
 
 ### **Step 1: Run Unit Tests**
 ```bash
+# CP3: KeeperHub Execution
+node test-cp3.js
+# Expected: ✅ PASSED: 18/18 (100% passing)
+
+# CP2: AXL P2P Messaging
 node test-cp2.js
 # Expected: ✅ PASSED: 11/12 (one expected state issue)
 ```
@@ -160,51 +165,84 @@ npm run dev
 
 ### **Step 3: Test API Endpoints (New Terminal)**
 
-**Test 3A: Agent Discovery**
+**Test 3A: Keeper Queue Statistics**
 ```bash
-# Get all agents
-curl "http://localhost:3000/api/agent/discover"
+curl "http://localhost:3000/api/agent/execute?action=stats"
 
-# Filter by capability
-curl "http://localhost:3000/api/agent/discover?capability=swap"
+# Expected response:
+# {
+#   "success": true,
+#   "stats": {
+#     "total": 5,
+#     "queued": 4,
+#     "executing": 0,
+#     "completed": 1,
+#     "failed": 0,
+#     "confirming": 0
+#   }
+# }
 ```
 
-**Test 3B: Send Task Message**
+**Test 3B: Register Keeper Account**
 ```bash
-curl -X POST http://localhost:3000/api/agent/task/send \
+curl -X POST http://localhost:3000/api/agent/execute \
   -H "Content-Type: application/json" \
   -d '{
-    "fromAgentName": "AgentA",
-    "fromAgentAddress": "0xf866683E1eC4a62503C0128413EA0269E2A397d4",
-    "toAgentAddress": "0x1234567890123456789012345678901234567890",
-    "task": {
-      "action": "swap",
-      "fromToken": "USDC",
-      "toToken": "DAI",
-      "amount": "100"
-    },
-    "priority": "high"
+    "action": "registerAccount",
+    "walletAddress": "0xf866683E1eC4a62503C0128413EA0269E2A397d4"
   }'
+
+# Expected: 201 Created
+# {
+#   "success": true,
+#   "accountId": "keeper-xxxx",
+#   "walletAddress": "0xf866683E1eC4a62503C0128413EA0269E2A397d4",
+#   "balance": 5.0,
+#   "status": "ACTIVE"
+# }
 ```
 
-**Test 3C: Fetch Messages**
+**Test 3C: Schedule Execution**
 ```bash
-curl "http://localhost:3000/api/agent/task/fetch?agentAddress=0x1234567890123456789012345678901234567890"
-```
-
-**Test 3D: Register Agent (CP1)**
-```bash
-curl -X POST http://localhost:3000/api/agent/register \
+curl -X POST http://localhost:3000/api/agent/execute \
   -H "Content-Type: application/json" \
   -d '{
-    "agentName": "TestAgent",
-    "agentAddress": "0xf866683E1eC4a62503C0128413EA0269E2A397d4"
+    "action": "scheduleExecution",
+    "taskId": "task-123",
+    "agentAddress": "0xf866683E1eC4a62503C0128413EA0269E2A397d4",
+    "onchainAction": "confirmCompletion",
+    "params": {"gasLimit": 100000}
   }'
+
+# Expected: 201 Created
+# {
+#   "success": true,
+#   "taskId": "task-123",
+#   "status": "QUEUED",
+#   "keeper": "keeper-xxxx"
+# }
 ```
 
-**Test 3E: Resolve Agent (CP1)**
+**Test 3D: Poll Task Status**
 ```bash
-curl "http://localhost:3000/api/agent/resolve?name=TestAgent.eth"
+curl "http://localhost:3000/api/agent/execute?taskId=task-123"
+
+# Expected: 200 OK
+# {
+#   "success": true,
+#   "taskId": "task-123",
+#   "status": "QUEUED",
+#   "progress": "10%",
+#   "attempts": 0,
+#   "maxAttempts": 3
+# }
+```
+
+**Test 3E: Get All Keeper Accounts**
+```bash
+curl "http://localhost:3000/api/agent/execute?action=accounts"
+
+# Returns list of all registered keeper accounts
 ```
 
 ### **Step 4: Check Server Logs**
@@ -230,12 +268,12 @@ cat agent/axl_messages.json
 | **CP0** | Environment Setup | 2h | ✅ **COMPLETE** | RPC, wallet, config, validation |
 | **CP1** | ENS Identity System | 4h | ✅ **COMPLETE** | Agent registration, resolution, 6/6 tests |
 | **CP2** | AXL P2P Messaging | 6h | ✅ **COMPLETE** | Agent discovery, encrypted tasks, 11/12 tests |
-| **CP3** | KeeperHub Execution | 4h | ⏳ **NEXT** | Gasless execution, retries |
-| **CP4** | Uniswap Settlement | 4h | ⏳ Planned | Autonomous payments, token swaps |
+| **CP3** | KeeperHub Execution | 4h | ✅ **COMPLETE** | Gasless execution, retries, 18/18 tests, locally tested |
+| **CP4** | Uniswap Settlement | 4h | ⏳ **NEXT** | Autonomous payments, token swaps |
 | **CP5** | Dashboard UI | 8h | ⏳ Planned | Agent management, task history |
 | **CP6** | Final Demo | 8h | ⏳ Planned | Testing, bug fixes, submission |
 
-**Current Progress:** 12/36 hours (33%) — **3/7 checkpoints complete** ✅
+**Current Progress:** 16/36 hours (44%) — **4/7 checkpoints complete** ✅
 
 ---
 
@@ -411,12 +449,118 @@ GET /api/agent/task/fetch?agentAddress=0x123456789012345678901234567890123456789
 }
 ```
 
-### Execution (CP3 — Coming Soon)
+### Execution (CP3 — ✅ Complete)
 
+**Register Keeper Account**
 ```bash
-# Execute transaction on KeeperHub
 POST /api/agent/execute
-GET /api/agent/execute?taskId=...
+{
+  "action": "registerAccount",
+  "walletAddress": "0xf866683E1eC4a62503C0128413EA0269E2A397d4"
+}
+
+# Response:
+{
+  "success": true,
+  "accountId": "keeper-83f638e4-3aa2-49b8-bdc3-529f709e3ff3",
+  "walletAddress": "0xf866683E1eC4a62503C0128413EA0269E2A397d4",
+  "balance": 5.0,
+  "status": "ACTIVE"
+}
+```
+
+**Schedule Execution Task**
+```bash
+POST /api/agent/execute
+{
+  "action": "scheduleExecution",
+  "taskId": "test-task-123",
+  "agentAddress": "0xf866683E1eC4a62503C0128413EA0269E2A397d4",
+  "onchainAction": "confirmCompletion",
+  "params": {
+    "gasLimit": 100000
+  }
+}
+
+# Response:
+{
+  "success": true,
+  "taskId": "test-task-123",
+  "status": "QUEUED",
+  "keeper": "keeper-83f638e4-3aa2-49b8-bdc3-529f709e3ff3"
+}
+```
+
+**Execute Onchain**
+```bash
+POST /api/agent/execute
+{
+  "action": "executeTask",
+  "taskId": "test-task-123"
+}
+
+# Response:
+{
+  "success": true,
+  "taskId": "test-task-123",
+  "txHash": "0x1234abcd...",
+  "status": "EXECUTING"
+}
+```
+
+**Get Task Status**
+```bash
+GET /api/agent/execute?taskId=test-task-123
+
+# Response:
+{
+  "success": true,
+  "taskId": "test-task-123",
+  "status": "QUEUED",
+  "progress": "10%",
+  "attempts": 0,
+  "maxAttempts": 3,
+  "createdAt": "2026-04-28T17:54:26.883Z"
+}
+```
+
+**Get Queue Statistics**
+```bash
+GET /api/agent/execute?action=stats
+
+# Response:
+{
+  "success": true,
+  "stats": {
+    "total": 5,
+    "queued": 4,
+    "executing": 0,
+    "completed": 1,
+    "failed": 0,
+    "confirming": 0
+  }
+}
+```
+
+**List Keeper Accounts**
+```bash
+GET /api/agent/execute?action=accounts
+
+# Response:
+{
+  "success": true,
+  "count": 2,
+  "accounts": [
+    {
+      "accountId": "keeper-83f638e4-3aa2-49b8-bdc3-529f709e3ff3",
+      "walletAddress": "0xf866683E1eC4a62503C0128413EA0269E2A397d4",
+      "balance": 5.0,
+      "status": "ACTIVE",
+      "tasksExecuted": 5,
+      "successRate": "100%"
+    }
+  ]
+}
 ```
 
 ### Settlement (CP4 — Coming Soon)
