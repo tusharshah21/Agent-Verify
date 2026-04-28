@@ -14,7 +14,7 @@ import {
   getAllKeeperAccounts,
   getKeeperAccount,
   getQueueStats
-} from '../../agent/keeperExecutor.js';
+} from '../../../agent/keeperExecutor.js';
 
 export default async function handler(req, res) {
   try {
