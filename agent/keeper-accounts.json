@@ -1,0 +1,18 @@
+{
+  "0xf866683E1eC4a62503C0128413EA0269E2A397d4": {
+    "accountId": "keeper-83f638e4-3aa2-49b8-bdc3-529f709e3ff3",
+    "walletAddress": "0xf866683E1eC4a62503C0128413EA0269E2A397d4",
+    "balance": "5.0",
+    "registered": "2026-04-28T17:42:57.333Z",
+    "status": "ACTIVE",
+    "executedTasks": 0
+  },
+  "0x1234567890123456789012345678901234567890": {
+    "accountId": "keeper-3351abec-1099-4098-a581-c5cc7467a0b7",
+    "walletAddress": "0x1234567890123456789012345678901234567890",
+    "balance": "5.0",
+    "registered": "2026-04-28T17:42:57.342Z",
+    "status": "ACTIVE",
+    "executedTasks": 0
+  }
+}
