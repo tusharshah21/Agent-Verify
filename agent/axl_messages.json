@@ -226,5 +226,158 @@
     "status": "response",
     "timestamp": 1777395812606,
     "savedAt": 1777395812608
+  },
+  {
+    "id": "c0dfb3701f959663e1567d357c39ccb0",
+    "type": "task",
+    "from": "AgentA",
+    "fromAddress": "0xf866683E1eC4a62503C0128413EA0269E2A397d4",
+    "toAddress": "0x1234567890123456789012345678901234567890",
+    "task": {
+      "action": "swap",
+      "fromToken": "USDC",
+      "toToken": "DAI",
+      "amount": "100",
+      "slippage": 0.5
+    },
+    "priority": "high",
+    "expiresAt": 1777400252153,
+    "timestamp": 1777396652153,
+    "status": "sent",
+    "deliveredAt": null,
+    "savedAt": 1777396652155
+  },
+  {
+    "id": "e5bbf06f06b5b3491c9f2531139aa213",
+    "type": "task",
+    "from": "AgentA",
+    "fromAddress": "0xf866683E1eC4a62503C0128413EA0269E2A397d4",
+    "toAddress": "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
+    "task": {
+      "action": "swap",
+      "fromToken": "USDT",
+      "toToken": "USDC",
+      "amount": "50"
+    },
+    "priority": "normal",
+    "expiresAt": 1777400252162,
+    "timestamp": 1777396652162,
+    "status": "sent",
+    "deliveredAt": null,
+    "savedAt": 1777396652164
+  },
+  {
+    "id": "15e680d87e9babb7ac95a0718563ff41",
+    "type": "task",
+    "from": "AgentB",
+    "fromAddress": "0x1234567890123456789012345678901234567890",
+    "toAddress": "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
+    "task": {
+      "action": "bridge",
+      "fromChain": "Sepolia",
+      "toChain": "Polygon",
+      "amount": "75"
+    },
+    "priority": "normal",
+    "expiresAt": 1777400252167,
+    "timestamp": 1777396652167,
+    "status": "sent",
+    "deliveredAt": null,
+    "savedAt": 1777396652169
+  },
+  {
+    "id": "e5bbf06f06b5b3491c9f2531139aa213",
+    "type": "task",
+    "from": "AgentA",
+    "fromAddress": "0xf866683E1eC4a62503C0128413EA0269E2A397d4",
+    "toAddress": "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
+    "task": {
+      "action": "swap",
+      "fromToken": "USDT",
+      "toToken": "USDC",
+      "amount": "50"
+    },
+    "priority": "normal",
+    "expiresAt": 1777400252162,
+    "timestamp": 1777396652162,
+    "status": "delivered",
+    "retries": 0,
+    "deliveredAt": 1777396652174,
+    "savedAt": 1777396652176
+  },
+  {
+    "id": "15e680d87e9babb7ac95a0718563ff41",
+    "type": "task",
+    "from": "AgentB",
+    "fromAddress": "0x1234567890123456789012345678901234567890",
+    "toAddress": "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
+    "task": {
+      "action": "bridge",
+      "fromChain": "Sepolia",
+      "toChain": "Polygon",
+      "amount": "75"
+    },
+    "priority": "normal",
+    "expiresAt": 1777400252167,
+    "timestamp": 1777396652167,
+    "status": "delivered",
+    "retries": 0,
+    "deliveredAt": 1777396652174,
+    "savedAt": 1777396652180
+  },
+  {
+    "id": "469e4c95b811a34172e85757115b4d29",
+    "type": "task_response",
+    "from": "AgentC",
+    "fromAddress": "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
+    "toAddress": "0xf866683E1eC4a62503C0128413EA0269E2A397d4",
+    "inReplyTo": "e5bbf06f06b5b3491c9f2531139aa213",
+    "response": {
+      "status": "completed",
+      "result": "100 USDC → 99.5 DAI",
+      "txHash": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "status": "response",
+    "timestamp": 1777396652187,
+    "savedAt": 1777396652188
+  },
+  {
+    "id": "58e8d61f2d5d5d22a63bbd4df837fa37",
+    "type": "task",
+    "from": "TestAgent",
+    "fromAddress": "0xf866683E1eC4a62503C0128413EA0269E2A397d4",
+    "toAddress": "0x1234567890123456789012345678901234567890",
+    "task": {
+      "amount": "100",
+      "toToken": "DAI",
+      "action": "swap",
+      "fromToken": "USDC"
+    },
+    "priority": "high",
+    "expiresAt": 1777401013675,
+    "timestamp": 1777397413675,
+    "status": "sent",
+    "deliveredAt": null,
+    "savedAt": 1777397413678
+  },
+  {
+    "id": "58e8d61f2d5d5d22a63bbd4df837fa37",
+    "type": "task",
+    "from": "TestAgent",
+    "fromAddress": "0xf866683E1eC4a62503C0128413EA0269E2A397d4",
+    "toAddress": "0x1234567890123456789012345678901234567890",
+    "task": {
+      "amount": "100",
+      "toToken": "DAI",
+      "action": "swap",
+      "fromToken": "USDC"
+    },
+    "priority": "high",
+    "expiresAt": 1777401013675,
+    "timestamp": 1777397413675,
+    "status": "delivered",
+    "retries": 0,
+    "deliveredAt": 1777397423388,
+    "savedAt": 1777397423389
   }
 ]
