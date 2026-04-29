@@ -50,3 +50,6 @@ agent/debug.json
 agent/keeper-queue.json
 agent/axl-nodes.json
 agent/cache.json
+agent/settlement-history.json
+agent/swap-quotes.json
+agent/keeper-accounts.json
