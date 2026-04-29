@@ -144,10 +144,14 @@ node test-cp2.js
 
 ---
 
-## 🧪 **Local Testing Guide (CP3)**
+## 🧪 **Local Testing Guide (CP4)**
 
 ### **Step 1: Run Unit Tests**
 ```bash
+# CP4: Uniswap Settlement
+node test-cp4.js
+# Expected: ✅ PASSED: 20/20 (100% passing)
+
 # CP3: KeeperHub Execution
 node test-cp3.js
 # Expected: ✅ PASSED: 18/18 (100% passing)
@@ -269,11 +273,11 @@ cat agent/axl_messages.json
 | **CP1** | ENS Identity System | 4h | ✅ **COMPLETE** | Agent registration, resolution, 6/6 tests |
 | **CP2** | AXL P2P Messaging | 6h | ✅ **COMPLETE** | Agent discovery, encrypted tasks, 11/12 tests |
 | **CP3** | KeeperHub Execution | 4h | ✅ **COMPLETE** | Gasless execution, retries, 18/18 tests, locally tested |
-| **CP4** | Uniswap Settlement | 4h | ⏳ **NEXT** | Autonomous payments, token swaps |
-| **CP5** | Dashboard UI | 8h | ⏳ Planned | Agent management, task history |
+| **CP4** | Uniswap Settlement | 4h | ✅ **COMPLETE** | Token swaps, agent payments, 20/20 tests |
+| **CP5** | Dashboard UI | 8h | ⏳ **NEXT** | Agent management, task history |
 | **CP6** | Final Demo | 8h | ⏳ Planned | Testing, bug fixes, submission |
 
-**Current Progress:** 16/36 hours (44%) — **4/7 checkpoints complete** ✅
+**Current Progress:** 20/36 hours (56%) — **5/7 checkpoints complete** ✅
 
 ---
 
@@ -563,11 +567,138 @@ GET /api/agent/execute?action=accounts
 }
 ```
 
-### Settlement (CP4 — Coming Soon)
+### Settlement (CP4 — ✅ Complete)
 
+**Get Swap Quote**
 ```bash
-GET /api/agent/settle?action=quote&...
+GET /api/agent/settle?action=quote&fromToken=USDC&toToken=DAI&amount=100&slippage=0.5
+
+# Response:
+{
+  "success": true,
+  "quote": {
+    "quoteId": "quote-xxxx",
+    "fromToken": "USDC",
+    "toToken": "DAI",
+    "amountIn": "100",
+    "amountOut": "99.98",
+    "amountOutMin": "99.48",  # With 0.5% slippage
+    "exchangeRate": "0.9998",
+    "priceImpact": "0.30",    # Uniswap V3 fee
+    "feeAmount": "0.30",
+    "netAmountOut": "99.68",
+    "expiresIn": 30000
+  }
+}
+```
+
+**Execute Swap**
+```bash
 POST /api/agent/settle
+{
+  "action": "executeSwap",
+  "fromToken": "USDC",
+  "toToken": "DAI",
+  "amount": "100",
+  "recipientAddress": "0xf866683E1eC4a62503C0128413EA0269E2A397d4",
+  "slippage": 0.5
+}
+
+# Response: 201 Created
+{
+  "success": true,
+  "swapId": "swap-xxxx",
+  "status": "EXECUTING",
+  "txHash": "0x1234abcd...",
+  "amountOut": "99.98",
+  "fee": "0.30"
+}
+```
+
+**Execute Agent Payment**
+```bash
+POST /api/agent/settle
+{
+  "action": "executePayment",
+  "fromAgentAddress": "0xf866683E1eC4a62503C0128413EA0269E2A397d4",
+  "toAgentAddress": "0x1234567890123456789012345678901234567890",
+  "paymentToken": "USDC",
+  "amount": "100",
+  "swapToToken": "DAI"  # Optional: swap before sending
+}
+
+# Response: 201 Created
+{
+  "success": true,
+  "paymentId": "payment-xxxx",
+  "status": "EXECUTING",
+  "txHash": "0x5678ef...",
+  "finalAmount": "99.98"
+}
+```
+
+**Get Settlement Statistics**
+```bash
+GET /api/agent/settle?action=stats
+
+# Response:
+{
+  "success": true,
+  "totalSwaps": 5,
+  "completedSwaps": 3,
+  "failedSwaps": 0,
+  "pendingSwaps": 2,
+  "totalVolume": "500.00",
+  "successRate": "100",
+  "averageSwapSize": "100.00"
+}
+```
+
+**Get Settlement History**
+```bash
+GET /api/agent/settle?action=history&limit=10&offset=0
+
+# Response:
+{
+  "success": true,
+  "count": 5,
+  "total": 5,
+  "totalVolume": "500.00",
+  "totalSwaps": 5,
+  "successRate": "100",
+  "settlements": [
+    {
+      "id": "swap-xxxx",
+      "type": "TOKEN_SWAP",
+      "fromToken": "USDC",
+      "toToken": "DAI",
+      "amount": "100",
+      "status": "EXECUTING",
+      "txHash": "0x1234...",
+      "createdAt": "2026-04-29T..."
+    }
+  ]
+}
+```
+
+**Get Swap Status**
+```bash
+GET /api/agent/settle?swapId=swap-xxxx
+
+# Response:
+{
+  "success": true,
+  "swapId": "swap-xxxx",
+  "type": "TOKEN_SWAP",
+  "status": "EXECUTING",
+  "fromToken": "USDC",
+  "toToken": "DAI",
+  "amountIn": "100",
+  "amountOut": "99.98",
+  "txHash": "0x1234abcd...",
+  "createdAt": "2026-04-29T...",
+  "updatedAt": "2026-04-29T..."
+}
 ```
 
 ---
