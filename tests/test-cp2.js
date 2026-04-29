@@ -6,7 +6,7 @@
  * Tests: Agent discovery, encrypted messaging, task routing
  */
 
-import { AXLMessenger, MessageCrypto } from './agent/axlMessenger.js';
+import { AXLMessenger, MessageCrypto } from '../agent/axlMessenger.js';
 import crypto from 'crypto';
 
 const COLORS = {

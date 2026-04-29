@@ -12,7 +12,7 @@ import {
   setAgentCapabilities, 
   setAgentReputation,
   listAgents 
-} from './agent/agentIdentity.js';
+} from '../agent/agentIdentity.js';
 
 const COLORS = {
   reset: '\x1b[0m',

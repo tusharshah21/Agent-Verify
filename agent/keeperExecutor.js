@@ -7,12 +7,17 @@
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { ethers } from 'ethers';
 import { KEEPER_HUB_CONFIG, SEPOLIA_CONFIG } from '../config/sepolia.js';
 
-// Queue file path
-const QUEUE_FILE = path.join(process.cwd(), 'agent', 'keeper-queue.json');
-const KEEPER_ACCOUNTS_FILE = path.join(process.cwd(), 'agent', 'keeper-accounts.json');
+// Get module directory for reliable path resolution
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Queue file path (relative to this module's directory)
+const QUEUE_FILE = path.join(__dirname, 'keeper-queue.json');
+const KEEPER_ACCOUNTS_FILE = path.join(__dirname, 'keeper-accounts.json');
 
 // In-memory queue (synced to disk)
 let executionQueue = [];

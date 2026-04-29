@@ -8,6 +8,7 @@
 
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { v4 as uuidv4 } from 'uuid';
 import { ethers } from 'ethers';
 import { TOKENS, UNISWAP_CONFIG, WALLET_CONFIG, SEPOLIA_CONFIG } from '../config/sepolia.js';
@@ -15,7 +16,9 @@ import { TOKENS, UNISWAP_CONFIG, WALLET_CONFIG, SEPOLIA_CONFIG } from '../config
 /**
  * Uniswap Settlement Data Files
  */
-const DATA_DIR = path.join(process.cwd(), 'agent');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const DATA_DIR = __dirname;
 const SETTLEMENTS_FILE = path.join(DATA_DIR, 'settlement-history.json');
 const SWAP_QUOTES_FILE = path.join(DATA_DIR, 'swap-quotes.json');
 

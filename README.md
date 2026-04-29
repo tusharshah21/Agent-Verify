@@ -132,15 +132,33 @@ npm run dev
 ### Run Tests
 
 ```bash
-# CP0: Environment validation
+# Run latest test (CP4)
+npm test
+# Or: node run-tests.js
+
+# Run all checkpoint tests in sequence
+npm run test:all
+# Or: node run-tests.js all
+
+# Run specific checkpoint tests
+npm run test:cp0       # CP0 tests
+npm run test:cp1       # CP1 tests
+npm run test:cp2       # CP2 tests
+npm run test:cp3       # CP3 tests
+npm run test:cp4       # CP4 tests
+
+# From within tests/ folder
+cd tests
 node test-cp0.js
-
-# CP1: ENS Identity System
 node test-cp1.js
-
-# CP2: AXL P2P Messaging
-node test-cp2.js
 ```
+
+**Test Files Location:** `tests/` directory
+- `tests/test-cp0.js` - Environment validation
+- `tests/test-cp1.js` - ENS Identity System
+- `tests/test-cp2.js` - AXL P2P Messaging
+- `tests/test-cp3.js` - KeeperHub Execution
+- `tests/test-cp4.js` - Uniswap Settlement
 
 ---
 

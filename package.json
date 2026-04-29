@@ -6,7 +6,14 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test": "node tests/test-cp4.js",
+    "test:cp0": "node tests/test-cp0.js",
+    "test:cp1": "node tests/test-cp1.js",
+    "test:cp2": "node tests/test-cp2.js",
+    "test:cp3": "node tests/test-cp3.js",
+    "test:cp4": "node tests/test-cp4.js",
+    "test:all": "node tests/test-cp0.js && node tests/test-cp1.js && node tests/test-cp2.js && node tests/test-cp3.js && node tests/test-cp4.js"
   },
   "dependencies": {
     "@uniswap/sdk-core": "^7.13.0",

@@ -14,7 +14,7 @@ import {
   completeSwap,
   initializeUniswap,
   getTokenBySymbol
-} from './agent/uniswapBridge.js';
+} from '../agent/uniswapBridge.js';
 
 // Test results tracker
 let passCount = 0;

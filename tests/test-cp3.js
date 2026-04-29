@@ -15,7 +15,7 @@ import {
   getKeeperAccount,
   getQueueStats,
   initializeKeeper
-} from './agent/keeperExecutor.js';
+} from '../agent/keeperExecutor.js';
 
 const SEPOLIA_CONFIG = {
   WALLET_ADDRESS: '0xf866683E1eC4a62503C0128413EA0269E2A397d4',
