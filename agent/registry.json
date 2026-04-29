@@ -6,9 +6,10 @@
       "capabilities": {
         "execute": true,
         "swap": true,
-        "bridge": false
+        "bridge": true,
+        "settle": true
       },
-      "reputation": 150,
+      "reputation": 215,
       "version": "1.0.0",
       "registeredAt": "2026-04-27T17:40:47.055Z",
       "txHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
@@ -18,11 +19,27 @@
       "address": "0x2345678901234567890123456789012345678901",
       "capabilities": {
         "execute": true,
-        "swap": false
+        "swap": true,
+        "bridge": false,
+        "settle": true
       },
-      "reputation": 100,
+      "reputation": 178,
       "version": "1.0.0",
       "registeredAt": "2026-04-27T17:40:47.074Z",
+      "txHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "name": "agentC.eth",
+      "address": "0x3456789012345678901234567890123456789012",
+      "capabilities": {
+        "execute": true,
+        "swap": false,
+        "bridge": true,
+        "settle": false
+      },
+      "reputation": 95,
+      "version": "1.0.0",
+      "registeredAt": "2026-04-28T09:12:00.000Z",
       "txHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
     },
     {
@@ -30,9 +47,11 @@
       "address": "0xf866683E1eC4a62503C0128413EA0269E2A397d4",
       "capabilities": {
         "execute": true,
-        "swap": false
+        "swap": true,
+        "bridge": false,
+        "settle": true
       },
-      "reputation": 100,
+      "reputation": 130,
       "version": "1.0.0",
       "registeredAt": "2026-04-28T17:30:02.912Z",
       "txHash": "0x0000000000000000000000000000000000000000000000000000000000000000"

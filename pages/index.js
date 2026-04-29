@@ -62,12 +62,12 @@ export default function Home() {
         </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%', maxWidth: '300px' }}>
-          
+
           {/* Play Button */}
           <Link href="/play" style={{ textDecoration: 'none' }}>
-            <button style={{ 
-              width: '100%', padding: '20px', backgroundColor: '#7928CA', color: 'white', 
-              border: 'none', borderRadius: '12px', fontSize: '18px', fontWeight: 'bold', cursor: 'pointer' 
+            <button style={{
+              width: '100%', padding: '20px', backgroundColor: '#7928CA', color: 'white',
+              border: 'none', borderRadius: '12px', fontSize: '18px', fontWeight: 'bold', cursor: 'pointer'
             }}>
               PLAY GAME 🕹️
             </button>
@@ -75,11 +75,21 @@ export default function Home() {
 
           {/* Locker Button */}
           <Link href="/locker" style={{ textDecoration: 'none' }}>
-            <button style={{ 
-              width: '100%', padding: '20px', backgroundColor: '#1a1a1a', color: '#0f0', 
-              border: '2px solid #0f0', borderRadius: '12px', fontSize: '18px', fontWeight: 'bold', cursor: 'pointer' 
+            <button style={{
+              width: '100%', padding: '20px', backgroundColor: '#1a1a1a', color: '#0f0',
+              border: '2px solid #0f0', borderRadius: '12px', fontSize: '18px', fontWeight: 'bold', cursor: 'pointer'
             }}>
               MY WALLET 💼
+            </button>
+          </Link>
+
+          {/* AgentVerify Dashboard */}
+          <Link href="/dashboard" style={{ textDecoration: 'none' }}>
+            <button style={{
+              width: '100%', padding: '20px', backgroundColor: '#0c1a2e', color: '#0ea5e9',
+              border: '2px solid #0ea5e9', borderRadius: '12px', fontSize: '18px', fontWeight: 'bold', cursor: 'pointer'
+            }}>
+              AGENT DASHBOARD 🤖
             </button>
           </Link>
 

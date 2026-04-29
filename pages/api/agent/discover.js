@@ -6,29 +6,39 @@
  */
 
 import { getAXLMessenger } from '../../../agent/axlMessenger.js';
-import { WALLET_CONFIG } from '../../../config/sepolia.js';
+import { listAgents } from '../../../agent/agentIdentity.js';
 
 export default async function handler(req, res) {
   try {
-    // Only GET requests for discovery
     if (req.method !== 'GET') {
       return res.status(405).json({ error: 'Method not allowed. Use GET.' });
     }
 
-    const { capability, status, limit = 10 } = req.query;
+    const { capability, status, limit = 20 } = req.query;
 
-    // Get AXL messenger instance
     const messenger = await getAXLMessenger();
 
-    // Build filter
+    // Always seed mesh from ENS registry so online agents are visible
+    const registryAgents = await listAgents();
+    for (const agent of registryAgents) {
+      const existing = messenger.onlineAgents.get(agent.address);
+      if (!existing) {
+        messenger.onlineAgents.set(agent.address, {
+          name: agent.name,
+          address: agent.address,
+          lastSeen: new Date(agent.registeredAt).getTime(),
+          capabilities: agent.capabilities || { execute: true, swap: true },
+          reputation: agent.reputation || 100,
+          status: 'online',
+        });
+      }
+    }
+
     const filter = {};
     if (capability) filter.capability = capability;
     if (status) filter.status = status;
 
-    // Discover agents
     const agents = await messenger.discoverAgents(filter);
-
-    // Apply limit
     const results = agents.slice(0, parseInt(limit));
 
     return res.status(200).json({
@@ -38,6 +48,7 @@ export default async function handler(req, res) {
         name: agent.name,
         address: agent.address,
         capabilities: agent.capabilities,
+        reputation: agent.reputation || 0,
         status: agent.status,
         lastSeen: agent.lastSeen,
       })),

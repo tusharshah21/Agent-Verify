@@ -1,135 +1,128 @@
 /**
  * components/AgentDashboard.js
- * Main dashboard container integrating all CP1-CP4 systems
+ * Main dashboard container integrating all CP1–CP5 systems
  */
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import AgentList from './AgentList';
 import TaskFeed from './TaskFeed';
 import SettlementFeed from './SettlementFeed';
 import ExecutionQueue from './ExecutionQueue';
-import ReputationCard from './ReputationCard';
+import AXLMessageFeed from './AXLMessageFeed';
 import styles from '../styles/Dashboard.module.css';
 
 export default function AgentDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
   const [agents, setAgents] = useState([]);
-  const [tasks, setTasks] = useState([]);
+  const [messages, setMessages] = useState([]);
   const [settlements, setSettlements] = useState([]);
   const [executionStats, setExecutionStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [lastUpdate, setLastUpdate] = useState(new Date().toLocaleTimeString());
+  const [lastUpdate, setLastUpdate] = useState('');
 
-  // Fetch data on component mount
-  useEffect(() => {
-    fetchDashboardData();
-    // Poll for updates every 5 seconds
-    const interval = setInterval(() => {
-      fetchDashboardData();
-      setLastUpdate(new Date().toLocaleTimeString());
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
-
-  async function fetchDashboardData() {
+  const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Fetch agents from CP1
-      const agentsRes = await fetch('/api/agent/discover');
-      if (agentsRes.ok) {
-        const agentsData = await agentsRes.json();
-        setAgents(agentsData.agents || []);
+      const [agentsRes, statsRes, settlementsRes, messagesRes] = await Promise.allSettled([
+        fetch('/api/agent/discover'),
+        fetch('/api/agent/execute?action=stats'),
+        fetch('/api/agent/settle?action=history&limit=10'),
+        fetch('/api/agent/messages?limit=20'),
+      ]);
+
+      if (agentsRes.status === 'fulfilled' && agentsRes.value.ok) {
+        const data = await agentsRes.value.json();
+        setAgents(data.agents || []);
       }
 
-      // Fetch execution queue stats from CP3
-      const statsRes = await fetch('/api/agent/execute?action=stats');
-      if (statsRes.ok) {
-        const statsData = await statsRes.json();
-        setExecutionStats(statsData.stats || {});
+      if (statsRes.status === 'fulfilled' && statsRes.value.ok) {
+        const data = await statsRes.value.json();
+        setExecutionStats(data.stats || {});
       }
 
-      // Fetch settlement history from CP4
-      const settlementsRes = await fetch('/api/agent/settle?action=history&limit=5');
-      if (settlementsRes.ok) {
-        const settlementsData = await settlementsRes.json();
-        setSettlements(settlementsData.settlements || []);
+      if (settlementsRes.status === 'fulfilled' && settlementsRes.value.ok) {
+        const data = await settlementsRes.value.json();
+        setSettlements(data.settlements || []);
       }
 
-      // Note: /api/agent/task/fetch requires agentAddress parameter, so we skip it
-      // and show empty tasks instead
-      setTasks([]);
+      if (messagesRes.status === 'fulfilled' && messagesRes.value.ok) {
+        const data = await messagesRes.value.json();
+        setMessages(data.messages || []);
+      }
+
+      setLastUpdate(new Date().toLocaleTimeString());
     } catch (err) {
       setError(err.message);
-      console.error('Dashboard fetch error:', err);
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
-  if (error && loading) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.errorBanner}>
-          ⚠️ Error loading dashboard: {error}
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    fetchDashboardData();
+    const interval = setInterval(fetchDashboardData, 5000);
+    return () => clearInterval(interval);
+  }, [fetchDashboardData]);
+
+  const tabs = [
+    { id: 'overview', label: '📊 Overview' },
+    { id: 'agents', label: `👥 Agents (${agents.length})` },
+    { id: 'messages', label: `🔐 Messages (${messages.length})` },
+    { id: 'execution', label: '⛽ Execution' },
+    { id: 'settlement', label: '💱 Settlement' },
+  ];
 
   return (
     <div className={styles.container}>
-      {/* Header */}
       <div className={styles.header}>
-        <h1>🤖 AgentVerify Dashboard</h1>
-        <p className={styles.subtitle}>
-          Real-time agent coordination, execution, and settlement
-        </p>
-        {loading && <span className={styles.loadingBadge}>Updating...</span>}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
+          <div>
+            <h1>🤖 AgentVerify Dashboard</h1>
+            <p className={styles.subtitle}>
+              Trust layer — ENS Identity · AXL P2P · KeeperHub · Uniswap Settlement
+            </p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {loading && <span className={styles.loadingBadge}>Updating…</span>}
+            <span style={{ color: '#475569', fontSize: '12px' }} suppressHydrationWarning>
+              {lastUpdate ? `Updated ${lastUpdate}` : ''}
+            </span>
+          </div>
+        </div>
       </div>
 
-      {/* Tab Navigation */}
+      {error && (
+        <div className={styles.errorBanner}>⚠️ {error}</div>
+      )}
+
       <div className={styles.tabBar}>
-        <button
-          className={`${styles.tabButton} ${activeTab === 'overview' ? styles.active : ''}`}
-          onClick={() => setActiveTab('overview')}
-        >
-          📊 Overview
-        </button>
-        <button
-          className={`${styles.tabButton} ${activeTab === 'agents' ? styles.active : ''}`}
-          onClick={() => setActiveTab('agents')}
-        >
-          👥 Agents ({agents.length})
-        </button>
-        <button
-          className={`${styles.tabButton} ${activeTab === 'execution' ? styles.active : ''}`}
-          onClick={() => setActiveTab('execution')}
-        >
-          ⛽ Execution
-        </button>
-        <button
-          className={`${styles.tabButton} ${activeTab === 'settlement' ? styles.active : ''}`}
-          onClick={() => setActiveTab('settlement')}
-        >
-          💱 Settlement
-        </button>
+        {tabs.map(tab => (
+          <button
+            key={tab.id}
+            className={`${styles.tabButton} ${activeTab === tab.id ? styles.active : ''}`}
+            onClick={() => setActiveTab(tab.id)}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
-      {/* Tab Content */}
       <div className={styles.content}>
-        {/* Overview Tab */}
         {activeTab === 'overview' && (
           <div className={styles.tab}>
             <div className={styles.grid}>
-              {/* Stats Cards */}
               <div className={styles.statsCard}>
                 <div className={styles.statValue}>{agents.length}</div>
                 <div className={styles.statLabel}>Agents Online</div>
+              </div>
+              <div className={styles.statsCard}>
+                <div className={styles.statValue}>{messages.length}</div>
+                <div className={styles.statLabel}>Mesh Messages</div>
               </div>
               <div className={styles.statsCard}>
                 <div className={styles.statValue}>{executionStats?.total || 0}</div>
@@ -137,43 +130,58 @@ export default function AgentDashboard() {
               </div>
               <div className={styles.statsCard}>
                 <div className={styles.statValue}>{settlements.length}</div>
-                <div className={styles.statLabel}>Recent Swaps</div>
-              </div>
-              <div className={styles.statsCard}>
-                <div className={styles.statValue}>{tasks.length}</div>
-                <div className={styles.statLabel}>Pending Messages</div>
+                <div className={styles.statLabel}>Settlements</div>
               </div>
             </div>
 
-            {/* Recent Activity */}
             <div className={styles.section}>
-              <h2>Recent Settlements</h2>
-              <SettlementFeed settlements={settlements.slice(0, 3)} />
+              <h2>Online Agents</h2>
+              <AgentList agents={agents.slice(0, 4)} onRefresh={fetchDashboardData} />
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+              <div className={styles.section}>
+                <h2>AXL Message Log</h2>
+                <AXLMessageFeed messages={messages.slice(0, 5)} />
+              </div>
+              <div className={styles.section}>
+                <h2>Recent Settlements</h2>
+                <SettlementFeed settlements={settlements.slice(0, 3)} />
+              </div>
             </div>
 
             <div className={styles.section}>
-              <h2>Execution Queue Status</h2>
+              <h2>Execution Queue</h2>
               <ExecutionQueue stats={executionStats} />
             </div>
           </div>
         )}
 
-        {/* Agents Tab */}
         {activeTab === 'agents' && (
           <div className={styles.tab}>
             <AgentList agents={agents} onRefresh={fetchDashboardData} />
           </div>
         )}
 
-        {/* Execution Tab */}
-        {activeTab === 'execution' && (
+        {activeTab === 'messages' && (
           <div className={styles.tab}>
-            <ExecutionQueue stats={executionStats} detailed={true} />
-            <TaskFeed tasks={tasks} />
+            <div className={styles.section}>
+              <h2>🔐 Encrypted AXL Message Feed</h2>
+              <AXLMessageFeed messages={messages} />
+            </div>
           </div>
         )}
 
-        {/* Settlement Tab */}
+        {activeTab === 'execution' && (
+          <div className={styles.tab}>
+            <ExecutionQueue stats={executionStats} detailed={true} />
+            <div className={styles.section} style={{ marginTop: '20px' }}>
+              <h2>Task Log</h2>
+              <TaskFeed tasks={messages.filter(m => m.type === 'task')} />
+            </div>
+          </div>
+        )}
+
         {activeTab === 'settlement' && (
           <div className={styles.tab}>
             <SettlementFeed settlements={settlements} detailed={true} />
@@ -181,11 +189,16 @@ export default function AgentDashboard() {
         )}
       </div>
 
-      {/* Footer */}
       <div className={styles.footer}>
-        <p suppressHydrationWarning>Last updated: {lastUpdate}</p>
-        <button className={styles.refreshButton} onClick={fetchDashboardData} disabled={loading}>
-          {loading ? '🔄 Updating...' : '🔄 Refresh'}
+        <p suppressHydrationWarning>
+          Sepolia Testnet · Last updated: {lastUpdate || '—'}
+        </p>
+        <button
+          className={styles.refreshButton}
+          onClick={fetchDashboardData}
+          disabled={loading}
+        >
+          {loading ? '🔄 Updating…' : '🔄 Refresh'}
         </button>
       </div>
     </div>
