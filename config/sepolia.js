@@ -11,6 +11,7 @@ export const SEPOLIA_CONFIG = {
   chainId: 11155111,
   name: 'Ethereum Sepolia',
   rpcUrl: process.env.NEXT_PUBLIC_SEPOLIA_RPC,
+  RPC_URL: process.env.NEXT_PUBLIC_SEPOLIA_RPC, // For keeper executor
   explorerUrl: 'https://sepolia.etherscan.io',
   testnet: true,
 };
@@ -21,6 +22,7 @@ export const SEPOLIA_CONFIG = {
 export const WALLET_CONFIG = {
   address: process.env.SEPOLIA_PUBLIC_KEY,
   privateKey: process.env.SEPOLIA_PRIVATE_KEY,
+  PRIVATE_KEY: process.env.SEPOLIA_PRIVATE_KEY, // For keeper executor (uppercase)
   agentAddress: process.env.AGENT_WALLET_ADDRESS,
   agentPrivateKey: process.env.AGENT_WALLET_PRIVATE_KEY,
 };

@@ -87,7 +87,19 @@ export default function AgentDashboard() {
               Trust layer — ENS Identity · AXL P2P · KeeperHub · Uniswap Settlement
             </p>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <span style={{ 
+              background: '#10b981', 
+              color: 'white', 
+              padding: '4px 10px', 
+              borderRadius: '12px', 
+              fontSize: '11px', 
+              fontWeight: '600',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px'
+            }}>
+              🚀 Testnet Mode
+            </span>
             {loading && <span className={styles.loadingBadge}>Updating…</span>}
             <span style={{ color: '#475569', fontSize: '12px' }} suppressHydrationWarning>
               {lastUpdate ? `Updated ${lastUpdate}` : ''}

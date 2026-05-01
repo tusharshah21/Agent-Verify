@@ -9,7 +9,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { ethers } from 'ethers';
-import { KEEPER_HUB_CONFIG, SEPOLIA_CONFIG } from '../config/sepolia.js';
+import { KEEPER_HUB_CONFIG, SEPOLIA_CONFIG, WALLET_CONFIG } from '../config/sepolia.js';
 
 // Get module directory for reliable path resolution
 const __filename = fileURLToPath(import.meta.url);
@@ -257,13 +257,16 @@ export async function executeOnchain(taskId) {
     try {
       // Check if we have valid credentials for actual execution
       const hasValidCredentials = SEPOLIA_CONFIG.RPC_URL && 
-                                  SEPOLIA_CONFIG.PRIVATE_KEY && 
-                                  SEPOLIA_CONFIG.PRIVATE_KEY.length === 66; // Valid hex key
+                                  WALLET_CONFIG.PRIVATE_KEY && 
+                                  WALLET_CONFIG.PRIVATE_KEY.length === 66; // Valid hex key
+      
+      const executionMode = process.env.EXECUTION_MODE || 'SIMULATION';
+      const shouldUseTestnet = executionMode === 'TESTNET' && hasValidCredentials;
 
-      if (hasValidCredentials) {
-        // Perform actual blockchain transaction
+      if (shouldUseTestnet) {
+        // Perform actual blockchain transaction on Sepolia testnet
         const provider = new ethers.JsonRpcProvider(SEPOLIA_CONFIG.RPC_URL);
-        const wallet = new ethers.Wallet(SEPOLIA_CONFIG.PRIVATE_KEY, provider);
+        const wallet = new ethers.Wallet(WALLET_CONFIG.PRIVATE_KEY, provider);
 
         // Create transaction
         const tx = {
@@ -287,7 +290,7 @@ export async function executeOnchain(taskId) {
         task.txHash = txResponse.hash;
         task.status = 'CONFIRMING';
 
-        console.log(`📤 Transaction sent: ${txResponse.hash.substring(0, 10)}...`);
+        console.log(`📤 [TESTNET] Transaction sent: ${txResponse.hash.substring(0, 10)}...`);
 
         // Wait for confirmation
         const receipt = await txResponse.wait();
@@ -303,14 +306,14 @@ export async function executeOnchain(taskId) {
             timestamp: new Date().toISOString()
           };
 
-          console.log(`✅ Task completed: ${task.txHash.substring(0, 10)}...`);
+          console.log(`✅ [TESTNET] Task completed: ${task.txHash.substring(0, 10)}...`);
         } else {
           task.status = 'FAILED';
           task.lastError = 'Transaction failed to confirm';
         }
       } else {
-        // Simulate execution when credentials are not available (test mode)
-        console.log(`ℹ️  Running in simulation mode (no RPC credentials)`);
+        // Simulate execution when credentials are not available or mode is SIMULATION
+        console.log(`ℹ️  Running in ${executionMode} mode${!hasValidCredentials ? ' (missing credentials)' : ''}`);
         
         // Simulate random success/failure for testing
         const simulatedSuccess = Math.random() > 0.2; // 80% success rate
@@ -332,12 +335,12 @@ export async function executeOnchain(taskId) {
             timestamp: new Date().toISOString()
           };
 
-          console.log(`✅ Task completed (simulated): ${task.txHash.substring(0, 10)}...`);
+          console.log(`✅ Task completed (${executionMode}): ${task.txHash.substring(0, 10)}...`);
         } else {
           // Simulate execution failure
           task.status = 'FAILED';
           task.lastError = 'Simulated execution failure';
-          console.log(`⚠️  Task failed (simulated)`);
+          console.log(`⚠️  Task failed (${executionMode})`);
         }
       }
     } catch (txError) {

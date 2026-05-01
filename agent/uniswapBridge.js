@@ -200,6 +200,9 @@ export async function executeSwap(fromToken, toToken, amount, recipientAddress, 
     const quote = quoteResponse.quote;
     const swapId = `swap-${uuidv4()}`;
 
+    // Determine execution mode from environment
+    const executionMode = process.env.EXECUTION_MODE || 'SIMULATION';
+
     // Create settlement record
     const settlement = {
       swapId,
@@ -214,7 +217,7 @@ export async function executeSwap(fromToken, toToken, amount, recipientAddress, 
       feeAmount: quote.feeAmount,
       netAmountOut: quote.netAmountOut,
       status: 'PENDING',
-      executionMode: 'SIMULATION', // Will use simulation or real execution based on RPC
+      executionMode: executionMode,
       quoteId: quote.quoteId,
       routerAddress: UNISWAP_CONFIG.routerAddress,
       createdAt: new Date().toISOString(),
