@@ -138,6 +138,7 @@ export async function registerAgentName(agentName, agentAddress, privateKey = nu
 
 /**
  * Resolve an agent by ENS name
+ * Attempts real Sepolia ENS resolution first, falls back to local registry.
  * @param {string} name - ENS name (e.g., "agentA.eth")
  * @returns {Promise<{address: string, capabilities: object, reputation: number, version: string}>}
  */
@@ -145,19 +146,50 @@ export async function resolveAgent(name) {
   try {
     const registry = await loadRegistry();
     const agent = registry.agents.find(a => a.name.toLowerCase() === name.toLowerCase());
-    
-    if (!agent) {
-      throw new Error(`Agent ${name} not found in registry`);
+
+    // Attempt live ENS resolution on Sepolia
+    let ensAddress = null;
+    let ensResolved = false;
+    const provider = getProvider();
+    if (provider && name.endsWith('.eth')) {
+      try {
+        ensAddress = await provider.resolveName(name);
+        if (ensAddress) {
+          ensResolved = true;
+          console.log(`✅ [ENS] Live Sepolia resolution: ${name} → ${ensAddress}`);
+          // Sync resolved address back to local registry
+          if (agent && agent.address !== ensAddress) {
+            agent.address = ensAddress;
+            await saveRegistry(registry);
+          }
+        } else {
+          console.log(`ℹ️  [ENS] ${name} not registered on Sepolia — using local registry`);
+        }
+      } catch (ensError) {
+        console.warn(`⚠️  [ENS] Live resolution failed (${ensError.message}) — using local registry`);
+      }
     }
-    
-    console.log(`✅ [ENS] Resolved ${name} to ${agent.address}`);
-    
+
+    // Also compute namehash for on-chain verification proof
+    const node = namehash(name);
+
+    if (!agent && !ensAddress) {
+      throw new Error(`Agent ${name} not found in registry or on Sepolia ENS`);
+    }
+
+    const resolved = agent || {};
+    console.log(`✅ [ENS] Resolved ${name} to ${ensAddress || resolved.address}`);
+
     return {
-      address: agent.address,
-      capabilities: agent.capabilities,
-      reputation: agent.reputation,
-      version: agent.version,
-      registeredAt: agent.registeredAt,
+      address: ensAddress || resolved.address,
+      ensResolved,
+      ensAddress,
+      namehash: node,
+      network: 'sepolia',
+      capabilities: resolved.capabilities || {},
+      reputation: resolved.reputation || 0,
+      version: resolved.version || '1.0.0',
+      registeredAt: resolved.registeredAt || null,
     };
   } catch (error) {
     console.error('❌ [ENS] Resolution failed:', error.message);

@@ -81,13 +81,44 @@ function saveKeeperAccounts() {
   }
 }
 
+// KeeperHub REST API base URL
+const KEEPERHUB_API = 'https://api.keeperhub.com/v1';
+
+/**
+ * Call KeeperHub real API. Returns parsed JSON or null.
+ * Docs: https://docs.keeperhub.com/api
+ */
+async function keeperHubRequest(method, endpoint, body = null) {
+  const apiKey = KEEPER_HUB_CONFIG.apiKey;
+  if (!apiKey) return null;
+  try {
+    const fetch = (await import('node-fetch')).default;
+    const options = {
+      method,
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'X-Account-ID': KEEPER_HUB_CONFIG.accountId || '',
+      },
+    };
+    if (body) options.body = JSON.stringify(body);
+    const res = await fetch(`${KEEPERHUB_API}${endpoint}`, options);
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Initialize keeper executor on startup
  */
 export function initializeKeeper() {
   loadQueue();
   loadKeeperAccounts();
+  const hasRealKey = !!(KEEPER_HUB_CONFIG.apiKey);
   console.log('✅ KeeperHub Executor initialized');
+  console.log(`   Mode: ${hasRealKey ? 'REAL KeeperHub API' : 'SIMULATION'}`);
   console.log(`   Queue items: ${executionQueue.length}`);
   console.log(`   Registered accounts: ${Object.keys(keeperAccounts).length}`);
 }
@@ -99,14 +130,11 @@ export function initializeKeeper() {
  */
 export async function registerKeeperAccount(walletAddress) {
   try {
-    // Validate address format
     if (!ethers.isAddress(walletAddress)) {
       throw new Error('Invalid Ethereum address');
     }
 
-    // Check if already registered
     if (keeperAccounts[walletAddress]) {
-      console.log(`⚠️  Keeper account already registered for ${walletAddress}`);
       return {
         success: true,
         walletAddress,
@@ -116,9 +144,26 @@ export async function registerKeeperAccount(walletAddress) {
       };
     }
 
-    // Simulate KeeperHub registration
+    // Try real KeeperHub API registration
+    const realResult = await keeperHubRequest('POST', '/accounts', { walletAddress });
+    if (realResult?.accountId) {
+      keeperAccounts[walletAddress] = {
+        accountId: realResult.accountId,
+        walletAddress,
+        balance: realResult.balance || '0',
+        registered: new Date().toISOString(),
+        status: 'ACTIVE',
+        executedTasks: 0,
+        source: 'keeperhub-api',
+      };
+      saveKeeperAccounts();
+      console.log(`✅ [KeeperHub] Real account registered: ${realResult.accountId}`);
+      return { success: true, ...keeperAccounts[walletAddress] };
+    }
+
+    // Fall back to simulation
     const accountId = `keeper-${uuidv4()}`;
-    const mockBalance = '5.0'; // Simulated balance in ETH
+    const mockBalance = '5.0';
 
     keeperAccounts[walletAddress] = {
       accountId,

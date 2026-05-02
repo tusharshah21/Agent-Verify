@@ -105,16 +105,32 @@ const MessageCrypto = {
 };
 
 /**
- * AXL Mesh Manager - Simulates Gensyn mesh network
+ * AXL Mesh Manager — Gensyn Agent eXchange Layer
+ *
+ * Connects to the real AXL binary (https://github.com/gensyn-ai/axl) when running.
+ * AXL provides: encrypted P2P routing, peer discovery, MCP + A2A support.
+ * Your app calls localhost — AXL handles everything else.
+ *
+ * To run AXL:
+ *   1. Download binary from https://github.com/gensyn-ai/axl/releases
+ *   2. Run: axl start --port 9090
+ *   3. Set AXL_PORT=9090 in .env.local (default)
+ *
+ * Falls back to local simulation if AXL binary is not running.
  */
 class AXLMessenger {
   constructor() {
     this.meshId = process.env.AXL_MESH_ID || 'agentverify-hackathon-2024';
     this.nodeId = this.generateNodeId();
     this.messageQueue = [];
-    this.onlineAgents = new Map(); // Map of agentAddress -> {name, lastSeen, capabilities}
+    this.onlineAgents = new Map();
     this.messageHistory = [];
     this.registryPath = path.join(__dirname, 'axl_messages.json');
+
+    // AXL binary HTTP endpoint (localhost — AXL handles P2P from here)
+    this.axlPort = process.env.AXL_PORT || '9090';
+    this.axlBase = `http://localhost:${this.axlPort}`;
+    this.axlAvailable = false;
   }
 
   /**
@@ -129,25 +145,115 @@ class AXLMessenger {
   }
 
   /**
-   * Initialize AXL mesh connection
-   * In production: connects to Gensyn mesh network
+   * Probe the AXL binary health endpoint. Returns true if binary is running.
+   */
+  async checkAXLBinary() {
+    try {
+      const { default: http } = await import('http');
+      return new Promise((resolve) => {
+        const req = http.get(`${this.axlBase}/health`, { timeout: 1000 }, (res) => {
+          resolve(res.statusCode === 200);
+        });
+        req.on('error', () => resolve(false));
+        req.on('timeout', () => { req.destroy(); resolve(false); });
+      });
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * POST to real AXL binary endpoint. Returns parsed JSON or null on failure.
+   */
+  async axlPost(endpoint, body) {
+    try {
+      const { default: http } = await import('http');
+      return new Promise((resolve) => {
+        const data = JSON.stringify(body);
+        const options = {
+          hostname: 'localhost',
+          port: this.axlPort,
+          path: endpoint,
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(data) },
+          timeout: 3000,
+        };
+        const req = http.request(options, (res) => {
+          let body = '';
+          res.on('data', chunk => body += chunk);
+          res.on('end', () => {
+            try { resolve(JSON.parse(body)); } catch { resolve(null); }
+          });
+        });
+        req.on('error', () => resolve(null));
+        req.write(data);
+        req.end();
+      });
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * GET from real AXL binary endpoint. Returns parsed JSON or null on failure.
+   */
+  async axlGet(endpoint) {
+    try {
+      const { default: http } = await import('http');
+      return new Promise((resolve) => {
+        const req = http.get(`${this.axlBase}${endpoint}`, { timeout: 3000 }, (res) => {
+          let body = '';
+          res.on('data', chunk => body += chunk);
+          res.on('end', () => {
+            try { resolve(JSON.parse(body)); } catch { resolve(null); }
+          });
+        });
+        req.on('error', () => resolve(null));
+      });
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Initialize AXL mesh connection.
+   * Connects to real AXL binary if running, else uses local simulation.
    */
   async initializeMesh(agentAddress, agentName, capabilities = {}) {
     try {
       console.log(`🔗 Initializing AXL mesh for ${agentName} (${agentAddress})`);
 
-      // Register agent in local mesh registry
-      await this.registerInMesh(agentAddress, agentName, capabilities);
+      // Check if real AXL binary is running
+      this.axlAvailable = await this.checkAXLBinary();
 
-      // Load any pending messages
+      if (this.axlAvailable) {
+        // Register this node with the real AXL daemon
+        const result = await this.axlPost('/register', {
+          nodeId: this.nodeId,
+          agentAddress,
+          agentName,
+          capabilities,
+          meshId: this.meshId,
+        });
+        if (result) {
+          console.log(`✅ [AXL] Connected to real AXL binary (NodeID: ${this.nodeId.slice(0, 8)}...)`);
+          console.log(`   Endpoint: ${this.axlBase} | MeshID: ${this.meshId}`);
+        }
+      } else {
+        console.log(`ℹ️  [AXL] Binary not running on port ${this.axlPort} — using local simulation`);
+        console.log(`   To enable: download AXL from github.com/gensyn-ai/axl and run: axl start --port ${this.axlPort}`);
+      }
+
+      // Register agent in local registry regardless
+      await this.registerInMesh(agentAddress, agentName, capabilities);
       await this.loadMessageQueue();
 
-      console.log(`✅ Mesh initialized (NodeID: ${this.nodeId.slice(0, 8)}...)`);
       return {
         success: true,
         nodeId: this.nodeId,
         meshId: this.meshId,
         agentAddress,
+        transport: this.axlAvailable ? 'axl-p2p' : 'local-simulation',
       };
     } catch (error) {
       throw new Error(`Mesh initialization failed: ${error.message}`);
@@ -201,14 +307,14 @@ class AXLMessenger {
   }
 
   /**
-   * Send encrypted task message to another agent
+   * Send encrypted task message to another agent.
+   * Uses real AXL P2P routing if binary is running, else local queue.
    */
   async sendTaskMessage(fromAgent, toAgentAddress, taskData, options = {}) {
     try {
       const messageId = crypto.randomBytes(16).toString('hex');
       const timestamp = Date.now();
 
-      // Create task envelope
       const taskMessage = {
         id: messageId,
         type: 'task',
@@ -217,45 +323,45 @@ class AXLMessenger {
         toAddress: toAgentAddress,
         task: taskData,
         priority: options.priority || 'normal',
-        expiresAt: timestamp + (options.ttl || 3600000), // Default 1 hour TTL
+        expiresAt: timestamp + (options.ttl || 3600000),
         timestamp,
       };
 
-      // Encrypt if recipient public key available
+      // Encrypt payload
       let encryptedMessage = taskMessage;
       if (options.recipientPublicKey) {
         encryptedMessage = {
           ...taskMessage,
-          encrypted: MessageCrypto.encryptMessage(
-            JSON.stringify(taskData),
-            options.recipientPublicKey
-          ),
+          encrypted: MessageCrypto.encryptMessage(JSON.stringify(taskData), options.recipientPublicKey),
         };
-        delete encryptedMessage.task; // Remove unencrypted task
+        delete encryptedMessage.task;
       }
 
-      // Add to message queue
-      this.messageQueue.push({
-        ...encryptedMessage,
-        status: 'pending',
-        retries: 0,
-      });
+      let transport = 'local';
 
-      // Store in history
-      await this.saveMessage({
-        ...taskMessage,
-        status: 'sent',
-        deliveredAt: null,
-      });
+      // Route via real AXL binary if available
+      if (this.axlAvailable) {
+        const axlResult = await this.axlPost('/send', {
+          to: toAgentAddress,
+          messageId,
+          payload: encryptedMessage,
+          meshId: this.meshId,
+        });
+        if (axlResult?.success) {
+          transport = 'axl-p2p';
+          console.log(`📤 [AXL] P2P message sent: ${fromAgent.name} → ${toAgentAddress.slice(0, 8)}... (ID: ${messageId.slice(0, 8)})`);
+        }
+      }
 
-      console.log(`📤 Task sent from ${fromAgent.name} to ${toAgentAddress.slice(0, 6)}...`);
+      // Always persist locally as backup
+      this.messageQueue.push({ ...encryptedMessage, status: 'pending', retries: 0 });
+      await this.saveMessage({ ...taskMessage, status: 'sent', deliveredAt: null, transport });
 
-      return {
-        messageId,
-        status: 'queued',
-        timestamp,
-        expiresAt: encryptedMessage.expiresAt,
-      };
+      if (transport === 'local') {
+        console.log(`📤 [AXL-sim] Task queued: ${fromAgent.name} → ${toAgentAddress.slice(0, 6)}...`);
+      }
+
+      return { messageId, status: 'queued', timestamp, expiresAt: encryptedMessage.expiresAt, transport };
     } catch (error) {
       throw new Error(`Failed to send task message: ${error.message}`);
     }
