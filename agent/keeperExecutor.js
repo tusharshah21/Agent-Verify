@@ -82,7 +82,7 @@ function saveKeeperAccounts() {
 }
 
 // KeeperHub REST API base — uses native fetch (Node 18+)
-const KEEPERHUB_API = 'https://api.keeperhub.com/v1';
+const KEEPERHUB_API = 'https://app.keeperhub.com/api';
 
 // Resolved account ID (auto-fetched if env var missing or same as API key)
 let resolvedAccountId = null;
@@ -118,19 +118,19 @@ async function keeperHubRequest(method, endpoint, body = null) {
 
 /**
  * Auto-discover account ID from KeeperHub API if not set or same as API key.
- * Tries /me endpoint — stores result so subsequent calls use it.
+ * Tries /user endpoint — stores result so subsequent calls use it.
  */
 async function resolveAccountId() {
   const envId = KEEPER_HUB_CONFIG.accountId;
   const apiKey = KEEPER_HUB_CONFIG.apiKey;
   // If account ID is missing, empty, or was accidentally set to the API key value
   if (!envId || envId === apiKey) {
-    const me = await keeperHubRequest('GET', '/me');
-    if (me?.accountId || me?.id || me?.account_id) {
-      resolvedAccountId = me.accountId || me.id || me.account_id;
+    const user = await keeperHubRequest('GET', '/user');
+    if (user?.id || user?.accountId || user?.account_id) {
+      resolvedAccountId = user.id || user.accountId || user.account_id;
       console.log(`✅ [KeeperHub] Account ID auto-discovered: ${resolvedAccountId}`);
     } else {
-      console.warn('[KeeperHub] Could not auto-discover account ID — check docs.keeperhub.com/api');
+      console.warn('[KeeperHub] Could not auto-discover account ID — check app.keeperhub.com/settings');
     }
   } else {
     resolvedAccountId = envId;

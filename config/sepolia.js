@@ -65,7 +65,7 @@ export const TOKENS = {
   WETH: {
     symbol: 'WETH',
     name: 'Wrapped Ether',
-    address: '0xfFf9976782d46CC05630D92EE39253FFFFFFAFEd',
+    address: '0xfff9976782d46CC05630d92eE39253FffffFafeD',
     decimals: 18,
   },
 
