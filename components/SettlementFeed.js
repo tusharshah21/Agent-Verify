@@ -50,7 +50,7 @@ export default function SettlementFeed({ settlements = [], detailed = false }) {
 
             <div className={styles.feedItemDetails}>
               <p>
-                <strong>Amount:</strong> {settlement.amount} {settlement.fromToken}
+                <strong>Amount:</strong> {settlement.amount || settlement.amountIn || '—'} {settlement.fromToken}
               </p>
               {settlement.txHash && (
                 <p>

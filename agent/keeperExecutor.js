@@ -81,29 +81,35 @@ function saveKeeperAccounts() {
   }
 }
 
-// KeeperHub REST API base URL
+// KeeperHub REST API base — uses native fetch (Node 18+)
 const KEEPERHUB_API = 'https://api.keeperhub.com/v1';
 
+// Resolved account ID (auto-fetched if env var missing or same as API key)
+let resolvedAccountId = null;
+
 /**
- * Call KeeperHub real API. Returns parsed JSON or null.
+ * Call KeeperHub real API using native fetch. Returns parsed JSON or null.
  * Docs: https://docs.keeperhub.com/api
  */
 async function keeperHubRequest(method, endpoint, body = null) {
   const apiKey = KEEPER_HUB_CONFIG.apiKey;
   if (!apiKey) return null;
   try {
-    const fetch = (await import('node-fetch')).default;
     const options = {
       method,
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
-        'X-Account-ID': KEEPER_HUB_CONFIG.accountId || '',
       },
+      signal: AbortSignal.timeout(5000),
     };
+    if (resolvedAccountId) options.headers['X-Account-ID'] = resolvedAccountId;
     if (body) options.body = JSON.stringify(body);
     const res = await fetch(`${KEEPERHUB_API}${endpoint}`, options);
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.warn(`[KeeperHub] API ${method} ${endpoint} → ${res.status}`);
+      return null;
+    }
     return await res.json();
   } catch {
     return null;
@@ -111,16 +117,37 @@ async function keeperHubRequest(method, endpoint, body = null) {
 }
 
 /**
+ * Auto-discover account ID from KeeperHub API if not set or same as API key.
+ * Tries /me endpoint — stores result so subsequent calls use it.
+ */
+async function resolveAccountId() {
+  const envId = KEEPER_HUB_CONFIG.accountId;
+  const apiKey = KEEPER_HUB_CONFIG.apiKey;
+  // If account ID is missing, empty, or was accidentally set to the API key value
+  if (!envId || envId === apiKey) {
+    const me = await keeperHubRequest('GET', '/me');
+    if (me?.accountId || me?.id || me?.account_id) {
+      resolvedAccountId = me.accountId || me.id || me.account_id;
+      console.log(`✅ [KeeperHub] Account ID auto-discovered: ${resolvedAccountId}`);
+    } else {
+      console.warn('[KeeperHub] Could not auto-discover account ID — check docs.keeperhub.com/api');
+    }
+  } else {
+    resolvedAccountId = envId;
+  }
+}
+
+/**
  * Initialize keeper executor on startup
  */
-export function initializeKeeper() {
+export async function initializeKeeper() {
   loadQueue();
   loadKeeperAccounts();
   const hasRealKey = !!(KEEPER_HUB_CONFIG.apiKey);
+  if (hasRealKey) await resolveAccountId();
   console.log('✅ KeeperHub Executor initialized');
-  console.log(`   Mode: ${hasRealKey ? 'REAL KeeperHub API' : 'SIMULATION'}`);
+  console.log(`   Mode: ${hasRealKey ? `REAL API (account: ${resolvedAccountId || 'discovering…'})` : 'SIMULATION'}`);
   console.log(`   Queue items: ${executionQueue.length}`);
-  console.log(`   Registered accounts: ${Object.keys(keeperAccounts).length}`);
 }
 
 /**

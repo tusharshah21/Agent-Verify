@@ -82,23 +82,34 @@ export default function AgentDashboard() {
       <div className={styles.header}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
           <div>
-            <h1>🤖 AgentVerify Dashboard</h1>
+            <h1>🤖 AgentVerify</h1>
             <p className={styles.subtitle}>
-              Trust layer — ENS Identity · AXL P2P · KeeperHub · Uniswap Settlement
+              Complete trust layer for autonomous AI agents
             </p>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '8px' }}>
+              {[
+                { label: 'ENS', color: '#6366f1' },
+                { label: 'Gensyn AXL', color: '#8b5cf6' },
+                { label: 'KeeperHub', color: '#10b981' },
+                { label: 'Uniswap', color: '#e91e8c' },
+                { label: '0G Storage', color: '#0ea5e9' },
+              ].map(t => (
+                <span key={t.label} style={{
+                  background: t.color, color: 'white',
+                  padding: '2px 8px', borderRadius: '8px',
+                  fontSize: '10px', fontWeight: '700', letterSpacing: '0.3px'
+                }}>{t.label}</span>
+              ))}
+            </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-            <span style={{ 
-              background: '#10b981', 
-              color: 'white', 
-              padding: '4px 10px', 
-              borderRadius: '12px', 
-              fontSize: '11px', 
-              fontWeight: '600',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px'
+            <span style={{
+              background: '#1e40af', color: 'white',
+              padding: '4px 10px', borderRadius: '12px',
+              fontSize: '11px', fontWeight: '600',
+              textTransform: 'uppercase', letterSpacing: '0.5px'
             }}>
-              🚀 Testnet Mode
+              ⚡ ETHGlobal 2025
             </span>
             {loading && <span className={styles.loadingBadge}>Updating…</span>}
             <span style={{ color: '#475569', fontSize: '12px' }} suppressHydrationWarning>

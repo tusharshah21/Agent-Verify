@@ -96,9 +96,9 @@ export default function Home() {
         </div>
       </main>
 
-      {/* Footer (To show scrolling works) */}
+      {/* Footer */}
       <footer style={{ padding: '20px', textAlign: 'center', color: '#444', fontSize: '12px' }}>
-        <p>Built for Gemini 3 hackathon</p>
+        <p>Built for ETHGlobal 2025 · ENS · Gensyn · KeeperHub · Uniswap · 0G</p>
       </footer>
 
     </div>
