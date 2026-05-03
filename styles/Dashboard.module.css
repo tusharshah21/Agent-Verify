@@ -8,8 +8,9 @@
   margin: 0 auto;
   padding: 20px;
   background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  min-height: 100vh;
+  min-height: calc(100vh - 53px);
   border-radius: 12px;
+  overflow: visible;
 }
 
 .header {

@@ -28,7 +28,10 @@ const PUBLIC_RESOLVER_ABI = [
 
 // Sepolia ENS addresses
 const ENS_REGISTRY_ADDRESS = '0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e';
-const PUBLIC_RESOLVER_ADDRESS = '0xd7a28E5e19B4800b4c7b2F4b0E5D6E1E5C8E5F1E'; // Sepolia testnet
+const PUBLIC_RESOLVER_ADDRESS = '0xd7a28E5e19B4800b4c7b2F4b0E5D6E1E5C8E5F1E';
+// Reverse Registrar — setName(name) writes a real on-chain tx setting the wallet's primary ENS name
+const REVERSE_REGISTRAR_ADDRESS = '0xA0a1AbcDAe1a2a4A2EF8e9113Ff0e02DD81DC0C6';
+const REVERSE_REGISTRAR_ABI = ['function setName(string memory name) returns (bytes32)'];
 
 /**
  * Initialize ethers.js provider and signer
@@ -101,14 +104,36 @@ function namehash(name) {
 export async function registerAgentName(agentName, agentAddress, privateKey = null) {
   try {
     const registry = await loadRegistry();
-    
+
     const fullName = `${agentName}.eth`;
     const hash = namehash(fullName);
-    
+
     console.log(`📝 [ENS] Registering ${fullName} for address ${agentAddress}`);
     console.log(`   Namehash: ${hash}`);
-    
-    // Add to local registry
+
+    let txHash = `0x${'0'.repeat(64)}`;
+    let onChain = false;
+
+    // In TESTNET mode, write a real Sepolia tx via the Reverse Registrar.
+    // setName(name) sets the on-chain primary ENS name for the signing wallet.
+    const key = privateKey || process.env.SEPOLIA_PRIVATE_KEY || process.env.AGENT_WALLET_PRIVATE_KEY;
+    if (process.env.EXECUTION_MODE === 'TESTNET' && key) {
+      try {
+        const signer = getSigner(key);
+        const reverseRegistrar = new ethers.Contract(REVERSE_REGISTRAR_ADDRESS, REVERSE_REGISTRAR_ABI, signer);
+        console.log(`⛓️  [ENS] Broadcasting setName("${fullName}") on Sepolia…`);
+        const tx = await reverseRegistrar.setName(fullName);
+        console.log(`   TX submitted: ${tx.hash}`);
+        const receipt = await tx.wait(1);
+        txHash = receipt.hash;
+        onChain = true;
+        console.log(`✅ [ENS] On-chain reverse record set — tx: ${txHash}`);
+        console.log(`   https://sepolia.etherscan.io/tx/${txHash}`);
+      } catch (txErr) {
+        console.warn(`⚠️  [ENS] On-chain tx failed (${txErr.message}) — falling back to local`);
+      }
+    }
+
     const agentRecord = {
       name: fullName,
       address: agentAddress,
@@ -116,19 +141,21 @@ export async function registerAgentName(agentName, agentAddress, privateKey = nu
       reputation: 100,
       version: '1.0.0',
       registeredAt: new Date().toISOString(),
-      txHash: `0x${'0'.repeat(64)}`, // Placeholder
+      txHash,
+      onChain,
     };
-    
+
     registry.agents.push(agentRecord);
     await saveRegistry(registry);
-    
-    console.log(`✅ [ENS] Agent registered locally: ${fullName}`);
-    
+
+    console.log(`✅ [ENS] Agent registered: ${fullName} (${onChain ? 'on-chain' : 'local'})`);
+
     return {
       success: true,
       name: fullName,
       address: agentAddress,
-      txHash: agentRecord.txHash,
+      txHash,
+      onChain,
     };
   } catch (error) {
     console.error('❌ [ENS] Registration failed:', error.message);

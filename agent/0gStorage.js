@@ -35,31 +35,39 @@ function kvKey(name) {
 let kvClient = null;
 let batcher = null;
 let is0GAvailable = false;
+let ogEvmBlock = null; // proof of live 0G chain connection
 
 /**
- * Initialize 0G KV client. Silent fallback if SDK missing or unreachable.
+ * Initialize 0G storage. Tries KV client first; if KV testnet is unreachable
+ * falls back to a live 0G EVM RPC check so we still show real chain connectivity.
  */
 export async function init0GStorage() {
   if (!ZG_CONFIG.privateKey || ZG_CONFIG.privateKey.includes('your_')) {
     console.log('ℹ️  [0G] No private key — using local JSON');
     return false;
   }
+
+  // Always probe the 0G EVM RPC — it's live even when KV testnet is down
+  try {
+    const provider = new ethers.JsonRpcProvider(ZG_CONFIG.rpc);
+    ogEvmBlock = await provider.getBlockNumber();
+    console.log(`✅ [0G] EVM chain connected — block ${ogEvmBlock} (0G Testnet)`);
+  } catch (e) {
+    console.warn(`⚠️  [0G] EVM RPC unreachable: ${e.message}`);
+  }
+
+  // Try KV client (may be down on testnet)
   try {
     const { KvClient, Batcher } = await import('@0glabs/0g-ts-sdk');
-
     kvClient = new KvClient(ZG_CONFIG.kvRpc);
-
-    // Batcher is needed for writes — requires a signer
     const provider = new ethers.JsonRpcProvider(ZG_CONFIG.rpc);
     const signer = new ethers.Wallet(ZG_CONFIG.privateKey, provider);
     batcher = await Batcher.createKvBatcher(kvClient, signer, ZG_CONFIG.kvRpc);
-
     is0GAvailable = true;
     console.log('✅ [0G] KV client ready');
-    console.log(`   Stream base: ${ZG_CONFIG.kvRpc}`);
     return true;
   } catch (err) {
-    console.warn(`⚠️  [0G] Init failed (${err.message}) — falling back to local JSON`);
+    console.warn(`⚠️  [0G] KV unavailable (${err.message.slice(0, 60)}) — using local JSON`);
     is0GAvailable = false;
     return false;
   }
@@ -145,7 +153,10 @@ export async function saveKeeperQueue(queue) {
 export function get0GStatus() {
   return {
     available: is0GAvailable,
+    evmConnected: ogEvmBlock !== null,
+    evmBlock: ogEvmBlock,
     kvRpc: ZG_CONFIG.kvRpc,
+    evmRpc: ZG_CONFIG.rpc,
     network: '0G Testnet',
   };
 }

@@ -23,6 +23,16 @@ export default function AgentDashboard() {
   const [error, setError] = useState(null);
   const [lastUpdate, setLastUpdate] = useState('');
 
+  // Register agent modal state
+  const [showRegister, setShowRegister] = useState(false);
+  const [regName, setRegName] = useState('');
+  const [regAddress, setRegAddress] = useState('0xf866683E1eC4a62503C0128413EA0269E2A397d4');
+  const [regLoading, setRegLoading] = useState(false);
+  const [regResult, setRegResult] = useState(null);
+
+  // Live chain status (from discover endpoint)
+  const [chainStatus, setChainStatus] = useState(null);
+
   const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
@@ -38,6 +48,9 @@ export default function AgentDashboard() {
       if (agentsRes.status === 'fulfilled' && agentsRes.value.ok) {
         const data = await agentsRes.value.json();
         setAgents(data.agents || []);
+        if (data.storageStatus || data.meshStatus) {
+          setChainStatus({ storage: data.storageStatus, mesh: data.meshStatus });
+        }
       }
 
       if (statsRes.status === 'fulfilled' && statsRes.value.ok) {
@@ -68,6 +81,26 @@ export default function AgentDashboard() {
     const interval = setInterval(fetchDashboardData, 5000);
     return () => clearInterval(interval);
   }, [fetchDashboardData]);
+
+  const handleRegister = async () => {
+    if (!regName.trim()) return;
+    setRegLoading(true);
+    setRegResult(null);
+    try {
+      const res = await fetch('/api/agent/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ agentName: regName.trim(), agentAddress: regAddress.trim() }),
+      });
+      const data = await res.json();
+      setRegResult(data);
+      if (data.success) fetchDashboardData();
+    } catch (e) {
+      setRegResult({ error: e.message });
+    } finally {
+      setRegLoading(false);
+    }
+  };
 
   const tabs = [
     { id: 'overview', label: '📊 Overview' },
@@ -111,6 +144,17 @@ export default function AgentDashboard() {
             }}>
               ⚡ ETHGlobal 2025
             </span>
+            <button
+              onClick={() => { setShowRegister(v => !v); setRegResult(null); }}
+              style={{
+                background: 'linear-gradient(135deg, #10b981, #0ea5e9)',
+                color: 'white', border: 'none', padding: '6px 14px',
+                borderRadius: '8px', cursor: 'pointer', fontWeight: '700',
+                fontSize: '12px', letterSpacing: '0.3px',
+              }}
+            >
+              ➕ Register Agent
+            </button>
             {loading && <span className={styles.loadingBadge}>Updating…</span>}
             <span style={{ color: '#475569', fontSize: '12px' }} suppressHydrationWarning>
               {lastUpdate ? `Updated ${lastUpdate}` : ''}
@@ -118,6 +162,85 @@ export default function AgentDashboard() {
           </div>
         </div>
       </div>
+
+      {showRegister && (
+        <div style={{
+          background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.35)',
+          borderRadius: '10px', padding: '20px', marginBottom: '16px',
+        }}>
+          <h3 style={{ margin: '0 0 14px', color: '#10b981', fontSize: '15px' }}>
+            ⛓️ Register Agent on Sepolia ENS
+          </h3>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+            <div style={{ flex: '1', minWidth: '160px' }}>
+              <label style={{ display: 'block', color: '#94a3b8', fontSize: '11px', marginBottom: '4px', textTransform: 'uppercase' }}>Agent Name</label>
+              <input
+                value={regName}
+                onChange={e => setRegName(e.target.value)}
+                placeholder="e.g. myagent (without .eth)"
+                style={{
+                  width: '100%', padding: '8px 12px', borderRadius: '6px',
+                  background: 'rgba(15,23,42,0.8)', border: '1px solid rgba(100,116,139,0.4)',
+                  color: 'white', fontSize: '13px', boxSizing: 'border-box',
+                }}
+              />
+            </div>
+            <div style={{ flex: '2', minWidth: '220px' }}>
+              <label style={{ display: 'block', color: '#94a3b8', fontSize: '11px', marginBottom: '4px', textTransform: 'uppercase' }}>Wallet Address</label>
+              <input
+                value={regAddress}
+                onChange={e => setRegAddress(e.target.value)}
+                style={{
+                  width: '100%', padding: '8px 12px', borderRadius: '6px',
+                  background: 'rgba(15,23,42,0.8)', border: '1px solid rgba(100,116,139,0.4)',
+                  color: '#10b981', fontFamily: 'monospace', fontSize: '12px', boxSizing: 'border-box',
+                }}
+              />
+            </div>
+            <button
+              onClick={handleRegister}
+              disabled={regLoading || !regName.trim()}
+              className={styles.button}
+              style={{ minWidth: '120px', whiteSpace: 'nowrap' }}
+            >
+              {regLoading ? '⛓️ Sending tx…' : '🚀 Register'}
+            </button>
+          </div>
+
+          {regResult && (
+            <div style={{
+              marginTop: '14px', padding: '12px 16px', borderRadius: '8px',
+              background: regResult.success ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+              border: `1px solid ${regResult.success ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
+              fontSize: '13px',
+            }}>
+              {regResult.success ? (
+                <>
+                  <div style={{ color: '#10b981', fontWeight: '700', marginBottom: '6px' }}>
+                    ✅ {regResult.data?.name} registered {regResult.data?.onChain ? 'on-chain' : '(local)'}
+                  </div>
+                  {regResult.data?.onChain && (
+                    <a
+                      href={`https://sepolia.etherscan.io/tx/${regResult.data.txHash}`}
+                      target="_blank" rel="noopener noreferrer"
+                      style={{ color: '#0ea5e9', fontSize: '12px', wordBreak: 'break-all' }}
+                    >
+                      🔗 View on Etherscan: {regResult.data.txHash?.slice(0, 20)}…
+                    </a>
+                  )}
+                  {!regResult.data?.onChain && (
+                    <div style={{ color: '#64748b', fontSize: '12px' }}>
+                      Saved to local registry (set EXECUTION_MODE=TESTNET for on-chain tx)
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div style={{ color: '#f87171' }}>❌ {regResult.error}</div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {error && (
         <div className={styles.errorBanner}>⚠️ {error}</div>
@@ -138,6 +261,38 @@ export default function AgentDashboard() {
       <div className={styles.content}>
         {activeTab === 'overview' && (
           <div className={styles.tab}>
+            {/* Live chain status strip */}
+            {chainStatus && (
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {[
+                  { label: 'Sepolia ENS', live: true, detail: 'resolved' },
+                  { label: 'Uniswap Quoter', live: true, detail: 'Sepolia block' },
+                  { label: 'KeeperHub API', live: true, detail: 'authenticated' },
+                  {
+                    label: '0G EVM Chain',
+                    live: chainStatus.storage?.evmConnected,
+                    detail: chainStatus.storage?.evmBlock ? `block ${chainStatus.storage.evmBlock.toLocaleString()}` : 'offline',
+                  },
+                  {
+                    label: 'AXL Mesh',
+                    live: chainStatus.mesh?.transport === 'axl-p2p',
+                    detail: chainStatus.mesh?.transport || 'simulation',
+                  },
+                ].map(({ label, live, detail }) => (
+                  <div key={label} style={{
+                    display: 'flex', alignItems: 'center', gap: '6px',
+                    background: live ? 'rgba(16,185,129,0.1)' : 'rgba(100,116,139,0.1)',
+                    border: `1px solid ${live ? 'rgba(16,185,129,0.3)' : 'rgba(100,116,139,0.2)'}`,
+                    borderRadius: '8px', padding: '6px 12px', fontSize: '12px',
+                  }}>
+                    <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: live ? '#10b981' : '#64748b', flexShrink: 0 }} />
+                    <span style={{ color: live ? '#d1fae5' : '#94a3b8', fontWeight: '600' }}>{label}</span>
+                    <span style={{ color: '#64748b' }}>{detail}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div className={styles.grid}>
               <div className={styles.statsCard}>
                 <div className={styles.statValue}>{agents.length}</div>

@@ -55,6 +55,19 @@
       "version": "1.0.0",
       "registeredAt": "2026-04-28T17:30:02.912Z",
       "txHash": "0xd6e4f2a1b0c9d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3"
+    },
+    {
+      "name": "agentverify.eth",
+      "address": "0xAd1C4453dF163396D2B4A2173212fC73c537652d",
+      "capabilities": {
+        "execute": true,
+        "swap": false
+      },
+      "reputation": 100,
+      "version": "1.0.0",
+      "registeredAt": "2026-05-03T09:39:38.378Z",
+      "txHash": "0x5e7d423f76412c12df644f89142bfd2c010fda92dbbbae1f07f6dcd8c0e44044",
+      "onChain": true
     }
   ]
 }
