@@ -8,6 +8,7 @@
 import { getAXLMessenger } from '../../../agent/axlMessenger.js';
 import { listAgents } from '../../../agent/agentIdentity.js';
 import { get0GStatus } from '../../../agent/0gStorage.js';
+import { getSwapQuote } from '../../../agent/uniswapBridge.js';
 
 export default async function handler(req, res) {
   try {
@@ -55,6 +56,7 @@ export default async function handler(req, res) {
       })),
       meshStatus: await messenger.getMeshStatus(),
       storageStatus: get0GStatus(),
+      uniswapQuote: await getSwapQuote('ETH', 'USDC', 1).catch(() => null),
     });
   } catch (error) {
     console.error('Discovery error:', error);

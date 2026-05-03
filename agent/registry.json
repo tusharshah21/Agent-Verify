@@ -68,6 +68,19 @@
       "registeredAt": "2026-05-03T09:39:38.378Z",
       "txHash": "0x5e7d423f76412c12df644f89142bfd2c010fda92dbbbae1f07f6dcd8c0e44044",
       "onChain": true
+    },
+    {
+      "name": "agentX.eth.eth",
+      "address": "0xf866683E1eC4a62503C0128413EA0269E2A397d4",
+      "capabilities": {
+        "execute": true,
+        "swap": false
+      },
+      "reputation": 100,
+      "version": "1.0.0",
+      "registeredAt": "2026-05-03T13:56:01.633Z",
+      "txHash": "0x3fb932cef69414850b53ffc44e1ffb58970c7fabe3082b73836d2f727cb61910",
+      "onChain": true
     }
   ]
 }

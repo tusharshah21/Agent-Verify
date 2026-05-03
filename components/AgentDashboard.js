@@ -48,8 +48,8 @@ export default function AgentDashboard() {
       if (agentsRes.status === 'fulfilled' && agentsRes.value.ok) {
         const data = await agentsRes.value.json();
         setAgents(data.agents || []);
-        if (data.storageStatus || data.meshStatus) {
-          setChainStatus({ storage: data.storageStatus, mesh: data.meshStatus });
+        if (data.storageStatus || data.meshStatus || data.uniswapQuote) {
+          setChainStatus({ storage: data.storageStatus, mesh: data.meshStatus, uniswap: data.uniswapQuote });
         }
       }
 
@@ -266,7 +266,13 @@ export default function AgentDashboard() {
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 {[
                   { label: 'Sepolia ENS', live: true, detail: 'resolved' },
-                  { label: 'Uniswap Quoter', live: true, detail: 'Sepolia block' },
+                  {
+                    label: 'Uniswap Quoter',
+                    live: !!chainStatus.uniswap?.outputAmount,
+                    detail: chainStatus.uniswap?.outputAmount
+                      ? `1 ETH ≈ ${parseFloat(chainStatus.uniswap.outputAmount).toLocaleString(undefined, { maximumFractionDigits: 0 })} USDC`
+                      : 'no liquidity',
+                  },
                   { label: 'KeeperHub API', live: true, detail: 'authenticated' },
                   {
                     label: '0G EVM Chain',
